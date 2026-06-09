@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- fft.fun: fast-frugal multi-objective tree.
+-- fft.luk: fast-frugal multi-objective tree.
 -- (c) 2026, Tim Menzies <timm@ieee.org>, MIT license
 --
 -- Options:

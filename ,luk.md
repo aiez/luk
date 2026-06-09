@@ -5,24 +5,27 @@
 
 <a href="http://tiny/cc/fun"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~fun~l~150.png" alt="QR"></a>
 
-`funny` is the **`.fun` language**: a tiny indentation-based dialect that transpiles to Lua via `funny.lua` (~115-line filter, stdin → stdout). Same Lua semantics, fewer `end`s, Python-style list comprehensions.
+`luk` is the **`.luk` language**: a tiny indentation-based dialect that transpiles to Lua via `luk.lua` (~100-line module). `luk.lua` returns a single function: `local lua_src = require("luk")(fun_src)`. Same Lua semantics, fewer `end`s, Python-style list comprehensions.
 
 ```bash
 git clone http://tiny.cc/fun && cd fun
-cat my.fun | lua funny.lua > my.lua   # transpile
-lua my.lua                          # run
-make my.lua                         # via Makefile
+# transpile (luk.lua is a module; one-liner driver):
+lua -e 'io.write(require("luk")(io.read("*a")))' < my.luk > my.lua
+lua my.lua                            # run
+make my.lua                           # via Makefile
 ```
 
-For the optimizer shipped with funny (`fft.fun`) see [fft.md](fft.md).
+For the optimizer shipped with luk (`fft.luk`) see [fft.md](fft.md).
 
 ## NAME
 
-    fun - .fun-to-Lua transpiler (single-file, no deps)
+    fun - .luk-to-Lua transpiler (single-file, no deps)
 
 ## SYNOPSIS
 
-    cat IN.fun | lua funny.lua > OUT.lua
+    lua -e 'io.write(require"luk"(io.read"*a"))' <IN.luk >OUT.lua
+    -- or programmatically:
+    --   local lua_src = require("luk")(fun_src)
 
 ## LANGUAGE REFERENCE
 
@@ -89,7 +92,7 @@ For the optimizer shipped with funny (`fft.fun`) see [fft.md](fft.md).
 
 Runtime, default mode (depth=4, 16 trees built):
 
-    file       rows    fft.py   fft.lua  fft.fun (transpile+run)
+    file       rows    fft.py   fft.lua  fft.luk (transpile+run)
     --------   -----   ------   ------   -----------------------
     auto93     398     0.080s   0.032s   0.039s
     SS-N      53663    9.18s    6.24s    6.11s
@@ -99,15 +102,15 @@ Lua 1.5x-2.5x faster than Python. Transpile overhead ~7ms
 
 ## FILES
 
-    funny.lua      .fun -> .lua transpiler (filter)
-    lib.fun      "battery" helpers (argmin, sum, csv, of, ...)
-    fft.fun      example: multi-objective regression tree
-    Makefile     rule:  %.lua: %.fun funny.lua
+    luk.lua      .luk -> .lua transpiler (filter)
+    lib.luk      "battery" helpers (argmin, sum, csv, of, ...)
+    fft.luk      example: multi-objective regression tree
+    Makefile     rule:  %.lua: %.luk luk.lua
 
 ## VIM SUPPORT
 
-    syntax: http://tiny.cc/timm-lua  -> etc/syntax/fun.vim
-    nvim init at etc/nvimfunny.lua.
+    syntax: http://tiny.cc/timm-lua  -> etc/syntax/luk.vim
+    nvim init at etc/nvimluk.lua.
 
 ## SEE ALSO
 

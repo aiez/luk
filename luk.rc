@@ -1,0 +1,18 @@
+# luk.rc - sourced after $(KONFIG)/bashrc by `make sh`.
+# Overrides the konfig `vi` alias with a function that adds
+# the .luk syntax overlay and accepts positional args.
+
+FUN_DIR="${FUN_DIR:-$(pwd)}"
+
+unalias vi 2>/dev/null
+vi() {
+  local init=""
+  [ -f "${KONFIG:-.}/init.lua" ] && init="-u ${KONFIG}/init.lua"
+  NVIM_APPNAME="${APP:-luk}" nvim --clean $init \
+    -c "au BufRead,BufNewFile *.luk setf luk" \
+    -c "source $FUN_DIR/luk.vim" \
+    "$@"
+}
+
+# transpile any .luk file via luk.lua
+fun2lua() { lua -e 'io.write(require("luk")(io.read("*a")))' < "$1"; }

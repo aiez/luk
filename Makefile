@@ -2,9 +2,9 @@
 # knobs only; shared targets live in $(KONFIG)/Makefile
 KONFIG ?= ../konfig
 
-APP   := funny
-MAIN  := fft.fun
-EXT   := fun
+APP   := luk
+MAIN  := fft.luk
+EXT   := luk
 LANG  := lua
 LINT  := true
 TOOLS := lua:run-lua
@@ -15,14 +15,28 @@ $(KONFIG)/Makefile:
 -include $(KONFIG)/Makefile
 
 # ---- transpile rule -----------------------------------------------
-# .fun -> .lua via funny.lua library (returns transpile function)
-%.lua: %.fun funny.lua
-	lua -e 'io.write(require("funny")(io.read("*a")))' < $< > $@
+# .luk -> .lua via luk.lua library (returns transpile function)
+%.lua: %.luk luk.lua
+	lua -e 'io.write(require("luk")(io.read("*a")))' < $< > $@
 
-# ---- funny shell: konfig bashrc + funny.rc (vi w/ .fun mode) ------
-fsh: ## funny tuned bash (konfig bashrc + funny.rc overlay)
+# ---- luk shell: konfig bashrc + luk.rc (vi w/ .luk mode) ------
+fsh: ## luk tuned bash (konfig bashrc + luk.rc overlay)
 	$(call need,nvim,fsh)
 	$(call need,git,fsh)
 	$(call konfig)
 	@KONFIG=$(abspath $(KONFIG)) APP=$(APP) MAIN=$(MAIN) BANNER=$(abspath $(BANNER)) \
-	 bash --rcfile <(cat $(KONFIG)/bashrc funny.rc) -i
+	 bash --rcfile <(cat $(KONFIG)/bashrc luk.rc) -i
+
+# ---- pdf via a2ps using shared lua.ssh sheet ----------------------
+# .luk has no native a2ps sheet; reuse lua.ssh (treat .luk as Lua-ish)
+SSH_DIR ?= $(HOME)/gits/timm/lua/etc
+A2PS_OPT ?= --no-default-settings --landscape --columns=2 \
+            --font-size=9 --line-numbers=1 --pretty-print=lua
+
+$(HOME)/tmp/%.pdf: %.luk
+	@mkdir -p $(HOME)/tmp
+	@TMP=$$(mktemp -d) && \
+	  a2ps $(A2PS_OPT) --style-sheet-path=$(SSH_DIR) \
+	       -o $$TMP/$*.ps $< && \
+	  ps2pdf $$TMP/$*.ps $@ && rm -rf $$TMP
+	@echo "wrote $@"

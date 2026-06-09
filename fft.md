@@ -4,12 +4,12 @@
 
 Smallest useful AI/XAI optimization tool. Builds a tiny regression
 tree from CSV via greedy min-variance cuts on incremental
-Welford μ/σ stats. Written in `.fun` (see [,funny.md](,funny.md)
+Welford μ/σ stats. Written in `.luk` (see [,luk.md](,luk.md)
 for the language).
 
 ```bash
-git clone http://tiny.cc/optimiz && git clone http://tiny.cc/funny
-cd funny && make fft.lua lib.lua
+git clone http://tiny.cc/optimiz && git clone http://tiny.cc/luk
+cd luk && make fft.lua lib.lua
 lua fft.lua -f ../optimiz/auto93.csv
 ```
 
@@ -74,7 +74,7 @@ CLI overrides match by first letter of each key in `the` table.
     Num  = {nump=true, n, mu, m2}          -- Welford running stats
     Data = {names, x, y, goal, cols, rows} -- no metatable
 
-    Helpers in lib.fun:
+    Helpers in lib.luk:
       argmin, argmax, sum, mean, sort, keys
       of (string -> number/bool/string)
       csv (file -> list of rows)
@@ -87,7 +87,7 @@ CLI overrides match by first letter of each key in `the` table.
 
 ## SEE ALSO
 
-    ,funny.md                .fun language reference
+    ,luk.md                .luk language reference
     http://tiny.cc/semble    Python sibling
     http://tiny.cc/optimiz   example CSVs
 

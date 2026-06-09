@@ -1,4 +1,4 @@
--- lib.fun: Lua "battery" for .fun programs.
+-- lib.luk: Lua "battery" for .luk programs.
 -- usage:  L := require("lib")
 --         abs, argmin = L.abs, L.argmin   -- or use L.abs etc.
 

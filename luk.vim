@@ -1,4 +1,4 @@
-" syntax/fun.vim : syntax for the "fun" language.
+" syntax/luk.vim : syntax for the "fun" language.
 " Reuses Lua syntax then overlays fun-specific tokens.
 if exists("b:current_syntax") | finish | endif
 

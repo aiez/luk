@@ -1,4 +1,4 @@
--- funny.lua : ".fun" -> Lua transpiler. Returns transpile fn.
+-- luk.lua : ".luk" -> Lua transpiler. Returns transpile fn.
 -- fun=function  !=return  NAME:=V  ->  local NAME=V
 -- if (c): elseif (c): else: for X in Y: while c: fun(a):
 -- Body after ":" = one-liner (auto end). Indent block ends on outdent.
