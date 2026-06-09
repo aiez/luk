@@ -2,14 +2,15 @@
 # Overrides the konfig `vi` alias with a function that adds
 # the .fun syntax overlay and accepts positional args.
 
-FUN_RTP="${FUN_RTP:-$(pwd)/etc}"
+FUN_DIR="${FUN_DIR:-$(pwd)}"
 
 unalias vi 2>/dev/null
 vi() {
   local init=""
   [ -f "${KONFIG:-.}/init.lua" ] && init="-u ${KONFIG}/init.lua"
   NVIM_APPNAME="${APP:-funny}" nvim --clean $init \
-    -c "set rtp+=$FUN_RTP" \
+    -c "au BufRead,BufNewFile *.fun setf fun" \
+    -c "source $FUN_DIR/fun.vim" \
     "$@"
 }
 

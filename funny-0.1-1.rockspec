@@ -6,7 +6,7 @@ source = {
 }
 
 description = {
-  summary  = "tiny .fun -> Lua transpiler (~115-line filter)",
+  summary  = "tiny .fun -> Lua transpiler (~100-line module)",
   detailed = [[
     funny is the .fun language: a tiny indentation-based dialect
     that transpiles to Lua. Same Lua semantics, fewer `end`s,
@@ -29,5 +29,5 @@ dependencies = { "lua >= 5.3" }
 build = {
   type    = "builtin",
   modules = { funny = "funny.lua" },
-  install = { conf = { ",funny.md" } },
+  install = { conf = { ",funny.md", "fun.vim" } },
 }
