@@ -1,14 +1,14 @@
 <!-- Copyright (c) 2026 Tim Menzies, MIT License https://opensource.org/licenses/MIT -->
 <img xalign="right" src="https://img.shields.io/badge/Purpose-Tiny·Lua·Transpiler-7b68ee?logo=githubcopilot&logoColor=white" alt="Purpose"> <a href="https://timm.fyi"> <img xalign="right" src="https://img.shields.io/badge/Author-timm-dc143c?logo=readme&logoColor=white" alt="Author"></a> <img xalign="right" src="https://img.shields.io/badge/Language-Lua-000080?logo=lua&logoColor=white" alt="Language"><a href="https://choosealicense.com/licenses/mit/"> <img xalign="right" src="https://img.shields.io/badge/License-MIT-32cd32?logo=open-source-initiative&logoColor=white" alt="License"></a>
 
-### [http://tiny.cc/funny](http://tiny.cc/funny)
+### [http://tiny.cc/fun](http://tiny.cc/fun)
 
-<img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~fun~l~150.png" alt="QR">
+<a href="http://tiny/cc/fun"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~fun~l~150.png" alt="QR"></a>
 
 `funny` is the **`.fun` language**: a tiny indentation-based dialect that transpiles to Lua via `funny.lua` (~115-line filter, stdin → stdout). Same Lua semantics, fewer `end`s, Python-style list comprehensions.
 
 ```bash
-git clone http://tiny.cc/funny && cd funny
+git clone http://tiny.cc/fun && cd fun
 cat my.fun | lua funny.lua > my.lua   # transpile
 lua my.lua                          # run
 make my.lua                         # via Makefile
