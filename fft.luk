@@ -21,25 +21,25 @@ the := {seed=1234567891, p=2, bins=7, depth=4, Round=2,
 local add, adds, disty, distys, qty, grows, show
 
 -- 1. Columns ------------------------------------------------
-Sym := fun(): ! {symp=true, has={}}
+Sym := fun(): !{symp=true, has={}}
 Num := fun(n, mu, m2):
-  ! {nump=true, n=n or 0, mu=mu or 0, m2=m2 or 0}
+  !{nump=true, n=n or 0, mu=mu or 0, m2=m2 or 0}
 
 sd := fun(num):
-  if (num.n < 2): ! 0
-  ! math.sqrt(math.max(0, num.m2) / (num.n - 1))
+  if (num.n < 2): !0
+  !math.sqrt(math.max(0, num.m2) / (num.n - 1))
 
 welford := fun(num, v, w):
   n, mu, m2 := num.n, num.mu, num.m2
   n += w
-  if (n <= 0): ! Num()
+  if (n <= 0): !Num()
   d := v - mu
   mu += w * d / n
-  ! Num(n, mu, m2 + w * d * (v - mu))
+  !Num(n, mu, m2 + w * d * (v - mu))
 
 norm := fun(num, v):
   z := (v - num.mu) / (sd(num) + 1/BIG)
-  ! 1 / (1 + math.exp(-1.7 * math.max(-3, math.min(3, z))))
+  !1 / (1 + math.exp(-1.7 * math.max(-3, math.min(3, z))))
 
 merge := fun(i, j, w):
   w := w or 1
@@ -48,13 +48,13 @@ merge := fun(i, j, w):
     for _, p in ipairs({{i,1}, {j,w}}):
       for k, vv in pairs(p[1].has):
         out.has[k] = (out.has[k] or 0) + p[2] * vv
-    ! out
+    !out
   n := i.n + w * j.n
-  if (n <= 0): ! Num()
+  if (n <= 0): !Num()
   mu := (i.n*i.mu + w * j.n * j.mu) / n
   d  := j.mu - i.mu
   m2 := i.m2 + w*j.m2 + w*d*d*i.n*j.n / n
-  ! Num(n, mu, m2)
+  !Num(n, mu, m2)
 
 -- 2. Data ---------------------------------------------------
 Data := fun(src):
@@ -76,10 +76,10 @@ Data := fun(src):
       if (z == "!"): it.klass = at
   roles(src[1])
   for i = 2, #src: it = add(it, src[i])
-  ! it
+  !it
 
 add = fun(it, v):
-  if (v == "?"): ! it
+  if (v == "?"): !it
   if (it.symp):
     it.has[v] = (it.has[v] or 0) + 1
   elseif (it.nump):
@@ -87,12 +87,12 @@ add = fun(it, v):
   else:
     table.insert(it.rows, v)
     it.cols = [add(it.cols[at], x) for at, x in ipairs(v)]
-  ! it
+  !it
 
 adds = fun(src, it):
   it := it or Num()
   for _, x in ipairs(src): it = add(it, x)
-  ! it
+  !it
 
 -- 3. Discretization ----------------------------------------
 cutsSyms := fun(bins, tot, hi, at):
@@ -100,7 +100,7 @@ cutsSyms := fun(bins, tot, hi, at):
   for k, l in pairs(bins):
     score := l.m2 + merge(tot, l, -1).m2
     out[#out+1] = {score=score, at=at, lo=hi[k], hi=hi[k], leaf=l}
-  ! out
+  !out
 
 cutsNums := fun(bins, tot, hi, at):
   out := {}
@@ -111,7 +111,7 @@ cutsNums := fun(bins, tot, hi, at):
     l = merge(l, bins[k])
     score := l.m2 + merge(tot, l, -1).m2
     out[#out+1] = {score=score, at=at, lo=-BIG, hi=hi[k], leaf=l}
-  ! out
+  !out
 
 cuts := fun(data, rows, y):
   out, ys := {}, [y(r) for _, r in ipairs(rows)]
@@ -131,55 +131,46 @@ cuts := fun(data, rows, y):
           hi[k] = math.max(hi[k] or -BIG, v)
     inner := (c.symp and cutsSyms or cutsNums)(bins, tot, hi, at)
     for _, x in ipairs(inner): out[#out+1] = x
-  ! out
+  !out
 
 -- 4. Build a tree ------------------------------------------
 disty = fun(data, row):
   p, s := the.p, 0
   for _, at in ipairs(data.y):
     s += abs(norm(data.cols[at], row[at]) - data.goal[at]) ^ p
-  ! (s / #data.y) ^ (1 / p)
+  !(s / #data.y) ^ (1 / p)
 
 distys = fun(data, rows):
   ys := [disty(data, r) for _, r in ipairs(rows)]
-  ! adds(ys)
+  !adds(ys)
 
-has := fun(v, lo, hi): ! v == "?" or (lo <= v and v <= hi)
+has := fun(v, lo, hi): !v == "?" or (lo <= v and v <= hi)
 
 rest := fun(rows, at, lo, hi):
-  ! [r for _, r in ipairs(rows) if not has(r[at], lo, hi)]
-
-splits := fun(data, y, root):
-  out := {}
-  floor := (#root.rows) ^ 0.33
-  all := cuts(data, data.rows, y)
-  cs := [c for _, c in ipairs(all) if c.leaf.n > floor]
-  if (#cs == 0): ! out
-  sort(cs, fun(a,b): ! a.leaf.mu < b.leaf.mu end)
-  for bit, c in ipairs({cs[1], cs[#cs]}):
-    no := rest(data.rows, c.at, c.lo, c.hi)
-    if (#no > 0):
-      out[#out+1] = {bit=bit-1,
-                     nd={at=c.at, lo=c.lo, hi=c.hi, left=c.leaf},
-                     no=no}
-  ! out
+  ![r for _, r in ipairs(rows) if not has(r[at], lo, hi)]
 
 grows = fun(data, y, root, d):
   d := d or 0
   out := {}
   if (d < the.depth):
-    for _, sp in ipairs(splits(data, y, root)):
-      child := {data.names}
-      for _, r in ipairs(sp.no): table.insert(child, r)
-      for _, br in ipairs(grows(Data(child), y, root, d+1)):
-        out[#out+1] = {bias=tostring(sp.bit) .. br.bias,
-                       tree={at=sp.nd.at, lo=sp.nd.lo,
-                             hi=sp.nd.hi, left=sp.nd.left,
-                             right=br.tree}}
+    floor := (#root.rows) ^ 0.33
+    all := cuts(data, data.rows, y)
+    cs := [c for _, c in ipairs(all) if c.leaf.n > floor]
+    if (#cs > 0):
+      sort(cs, fun(a,b): !a.leaf.mu < b.leaf.mu end)
+      for bit, c in ipairs({cs[1], cs[#cs]}):
+        no := rest(data.rows, c.at, c.lo, c.hi)
+        if (#no > 0):
+          child := {data.names}
+          for _, r in ipairs(no): table.insert(child, r)
+          for _, br in ipairs(grows(Data(child), y, root, d+1)):
+            out[#out+1] = {bias=tostring(bit-1) .. br.bias,
+                           tree={at=c.at, lo=c.lo, hi=c.hi,
+                                 left=c.leaf, right=br.tree}}
   if (#out == 0):
     ys := [y(r) for _, r in ipairs(data.rows)]
     out[#out+1] = {bias="", tree=adds(ys)}
-  ! out
+  !out
 
 -- 5. Use a tree --------------------------------------------
 predict := fun(t, row):
@@ -188,20 +179,20 @@ predict := fun(t, row):
       t = t.left
     else:
       t = t.right
-  ! t.mu
+  !t.mu
 
 tune := fun(cands, rows, y):
   err := fun(t):
     e := 0
     for _, r in ipairs(rows):
       e += abs(y(r) - predict(t, r))
-    ! e / #rows
-  ! argmin(cands, err)
+    !e / #rows
+  !argmin(cands, err)
 
 show = fun(data, t):
   if (t.nump):
     print(("%-33s leaf  d2h %.2f n=%d"):fmt("", t.mu, t.n))
-    ! nil
+    !nil
   nm := data.names[t.at]
   c := ""
   if (t.lo == t.hi):
@@ -217,14 +208,14 @@ show = fun(data, t):
 -- 6. IO ----------------------------------------------------
 qty = fun(v):
   if (type(v) == "number"):
-    if (math.floor(v) == v): ! math.floor(v)
-    ! tonumber(("%."..the.Round.."f"):fmt(v))
-  ! v
+    if (math.floor(v) == v): !math.floor(v)
+    !tonumber(("%."..the.Round.."f"):fmt(v))
+  !v
 
 -- 7. Tests/demos -------------------------------------------
 test_main := fun():
   data := Data(csv(the.file))
-  y    := fun(r): ! disty(data, r) end
+  y    := fun(r): !disty(data, r) end
   cands := {}
   for _, b in ipairs(grows(data, y, data)):
     table.insert(cands, b.tree)
@@ -232,7 +223,7 @@ test_main := fun():
 
 test_trees := fun():
   data  := Data(csv(the.file))
-  y     := fun(r): ! disty(data, r) end
+  y     := fun(r): !disty(data, r) end
   trees := grows(data, y, data)
   for i, bt in ipairs(trees):
     bias, t := bt.bias, bt.tree

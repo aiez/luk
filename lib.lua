@@ -12,13 +12,30 @@ local sqrt  = math.sqrt
 local exp  = math.exp
 local floor  = math.floor
 
+local sum                                  -- forward: mean uses sum
+
+-- shortest first ---------------------------------------------------
+local sort  = function(t, f) table.sort(t, f); return t end
+
+local of  = function(z) return z=="True" or z~="False" and (tonumber(z) or z) end
+
+local keys  = function(t) return sort((function() local _r={} for k, _ in pairs(t) do _r[#_r+1]=k end return _r end)()) end
+
+local mean  = function(xs) return sum(xs) / #xs end
+
+sum = function(xs)
+  local s  = 0
+  for _, x in ipairs(xs) do
+    s = s + x end
+  return s end
+
 local argmin  = function(xs, key)
   local best  = xs[1]
   local bv  = key(best)
   for i = 2, #xs do
     local v  = key(xs[i])
     if (v < bv) then best, bv = xs[i], v end end
-  return  best end
+  return best end
 
 local argmax  = function(xs, key)
   local best  = xs[1]
@@ -26,21 +43,7 @@ local argmax  = function(xs, key)
   for i = 2, #xs do
     local v  = key(xs[i])
     if (v > bv) then best, bv = xs[i], v end end
-  return  best end
-
-local sum  = function(xs)
-  local s  = 0
-  for _, x in ipairs(xs) do
-    s = s + x end
-  return  s end
-
-local mean  = function(xs) return  sum(xs) / #xs end
-
-local sort  = function(t, f) table.sort(t, f); return  t end
-
-local keys  = function(t) return  sort((function() local _r={} for k, _ in pairs(t) do _r[#_r+1]=k end return _r end)()) end
-
-local of  = function(z) return  z=="True" or z~="False" and (tonumber(z) or z) end
+  return best end
 
 local csv  = function(file)
   local out  = {}
@@ -50,8 +53,8 @@ local csv  = function(file)
       local row  = {}
       for x in ln:gmatch("[^,]+") do row[#row+1] = of(x) end
       out[#out+1] = row end end
-  return  out end
+  return out end
 
-return  {abs=abs, max=max, min=min, sqrt=sqrt, exp=exp, floor=floor,
+return {abs=abs, max=max, min=min, sqrt=sqrt, exp=exp, floor=floor,
    argmin=argmin, argmax=argmax, sum=sum, mean=mean,
    sort=sort, keys=keys, of=of, csv=csv}

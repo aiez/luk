@@ -27,8 +27,22 @@ fsh: ## luk tuned bash (konfig bashrc + luk.rc overlay)
 	@KONFIG=$(abspath $(KONFIG)) APP=$(APP) MAIN=$(MAIN) BANNER=$(abspath $(BANNER)) \
 	 bash --rcfile <(cat $(KONFIG)/bashrc luk.rc) -i
 
-# ---- pdf via konfig's ~/tmp/%.pdf rule -----------------------------
-# Inject lua.ssh content into env var LUASSH; konfig writes it to a
-# temp ~/.a2ps/lua.ssh and invokes a2ps --pretty-print=lua.
-export LUASSH := $(file < $(HOME)/gits/timm/lua/etc/lua.ssh)
-SSH := LUASSH
+# ---- pdf: override konfig's rule, use full path to lua.ssh --------
+# Works under GNU Make 3.81 (macOS default) which lacks $(file ...).
+LUK_SSH ?= $(HOME)/gits/timm/lua/etc/lua.ssh
+Cols    ?= 2
+Font    ?= 9
+Orient  ?= landscape
+
+$(HOME)/tmp/%.pdf: %.luk
+	@mkdir -p $(HOME)/tmp
+	@echo "pdfing : $@ ..."
+	@a2ps -Bj --$(Orient) --line-numbers=1 --highlight-level=heavy \
+	      --borders=no --pro=color \
+	      --left-footer="" --right-footer="" --footer="page %p." \
+	      --pretty-print=$(LUK_SSH) -M letter \
+	      --font-size=$(Font) --columns=$(Cols) \
+	      -o - $< 2> >(grep -v '^a2ps:/' >&2) \
+	  | ps2pdf - $@
+	@echo "wrote $@"
+	@open $@

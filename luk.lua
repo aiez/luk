@@ -61,7 +61,7 @@ local function line(b)
     {"(%f[%w_]else)%s*:%s*$",         "%1"},
     {"(%f[%w_]else)%s*:(%s)",         "%1%2"},
     {"!=",                            "~="},
-    {"!",                             "return "},
+    {"!%s*",                          "return "},
     {"%b[]", function(m)
        local n = m:sub(2,-2)
        local e,v,i,k = n:match"^(.-) for (.-) in (.-) if (.+)$"

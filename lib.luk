@@ -12,13 +12,29 @@ sqrt := math.sqrt
 exp := math.exp
 floor := math.floor
 
+local sum   -- forward: mean uses sum
+
+sort := fun(t, f): table.sort(t, f); !t
+
+of := fun(z): !z=="True" or z~="False" and (tonumber(z) or z)
+
+keys := fun(t): !sort([k for k, _ in pairs(t)])
+
+mean := fun(xs): !sum(xs) / #xs
+
+sum = fun(xs):
+  s := 0
+  for _, x in ipairs(xs):
+    s += x
+  !s
+
 argmin := fun(xs, key):
   best := xs[1]
   bv := key(best)
   for i = 2, #xs:
     v := key(xs[i])
     if (v < bv): best, bv = xs[i], v
-  ! best
+  !best
 
 argmax := fun(xs, key):
   best := xs[1]
@@ -26,21 +42,7 @@ argmax := fun(xs, key):
   for i = 2, #xs:
     v := key(xs[i])
     if (v > bv): best, bv = xs[i], v
-  ! best
-
-sum := fun(xs):
-  s := 0
-  for _, x in ipairs(xs):
-    s += x
-  ! s
-
-mean := fun(xs): ! sum(xs) / #xs
-
-sort := fun(t, f): table.sort(t, f); ! t
-
-keys := fun(t): ! sort([k for k, _ in pairs(t)])
-
-of := fun(z): ! z=="True" or z~="False" and (tonumber(z) or z)
+  !best
 
 csv := fun(file):
   out := {}
@@ -50,8 +52,8 @@ csv := fun(file):
       row := {}
       for x in ln:gmatch("[^,]+"): row[#row+1] = of(x)
       out[#out+1] = row
-  ! out
+  !out
 
-! {abs=abs, max=max, min=min, sqrt=sqrt, exp=exp, floor=floor,
+!{abs=abs, max=max, min=min, sqrt=sqrt, exp=exp, floor=floor,
    argmin=argmin, argmax=argmax, sum=sum, mean=mean,
    sort=sort, keys=keys, of=of, csv=csv}

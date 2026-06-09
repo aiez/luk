@@ -9,8 +9,10 @@ vi() {
   local init=""
   [ -f "${KONFIG:-.}/init.lua" ] && init="-u ${KONFIG}/init.lua"
   NVIM_APPNAME="${APP:-luk}" nvim --clean $init \
-    -c "au BufRead,BufNewFile *.luk setf luk" \
-    -c "source $FUN_DIR/luk.vim" \
+    -c "syntax on" \
+    -c "filetype plugin indent on" \
+    -c "au BufRead,BufNewFile *.luk setf luk |
+        source $FUN_DIR/luk.vim" \
     "$@"
 }
 
