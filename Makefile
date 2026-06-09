@@ -27,16 +27,19 @@ fsh: ## luk tuned bash (konfig bashrc + luk.rc overlay)
 	@KONFIG=$(abspath $(KONFIG)) APP=$(APP) MAIN=$(MAIN) BANNER=$(abspath $(BANNER)) \
 	 bash --rcfile <(cat $(KONFIG)/bashrc luk.rc) -i
 
-# ---- pdf via a2ps using shared lua.ssh sheet ----------------------
-# .luk has no native a2ps sheet; reuse lua.ssh (treat .luk as Lua-ish)
-SSH_DIR ?= $(HOME)/gits/timm/lua/etc
-A2PS_OPT ?= --no-default-settings --landscape --columns=2 \
+# ---- pdf via a2ps ----------------------
+# .luk has no native a2ps sheet. To get Lua-flavored highlighting,
+# install lua.ssh once into a2ps's sheets dir:
+#   sudo cp $(HOME)/gits/timm/lua/etc/lua.ssh \
+#     $$(a2ps --glob "*.ssh" | head -1 | xargs dirname)/
+# Without it, a2ps falls back to plain (no syntax color).
+A2PS_OPT ?= --landscape --columns=2 \
             --font-size=9 --line-numbers=1 --pretty-print=lua
 
 $(HOME)/tmp/%.pdf: %.luk
 	@mkdir -p $(HOME)/tmp
 	@TMP=$$(mktemp -d) && \
-	  a2ps $(A2PS_OPT) --style-sheet-path=$(SSH_DIR) \
-	       -o $$TMP/$*.ps $< && \
+	  a2ps $(A2PS_OPT) -o $$TMP/$*.ps $< 2>&1 \
+	    | grep -v "using plain style" || true; \
 	  ps2pdf $$TMP/$*.ps $@ && rm -rf $$TMP
 	@echo "wrote $@"
