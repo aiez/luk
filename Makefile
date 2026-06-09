@@ -27,19 +27,8 @@ fsh: ## luk tuned bash (konfig bashrc + luk.rc overlay)
 	@KONFIG=$(abspath $(KONFIG)) APP=$(APP) MAIN=$(MAIN) BANNER=$(abspath $(BANNER)) \
 	 bash --rcfile <(cat $(KONFIG)/bashrc luk.rc) -i
 
-# ---- pdf via a2ps ----------------------
-# .luk has no native a2ps sheet. To get Lua-flavored highlighting,
-# install lua.ssh once into a2ps's sheets dir:
-#   sudo cp $(HOME)/gits/timm/lua/etc/lua.ssh \
-#     $$(a2ps --glob "*.ssh" | head -1 | xargs dirname)/
-# Without it, a2ps falls back to plain (no syntax color).
-A2PS_OPT ?= --landscape --columns=2 \
-            --font-size=9 --line-numbers=1 --pretty-print=lua
-
-$(HOME)/tmp/%.pdf: %.luk
-	@mkdir -p $(HOME)/tmp
-	@TMP=$$(mktemp -d) && \
-	  a2ps $(A2PS_OPT) -o $$TMP/$*.ps $< 2>&1 \
-	    | grep -v "using plain style" || true; \
-	  ps2pdf $$TMP/$*.ps $@ && rm -rf $$TMP
-	@echo "wrote $@"
+# ---- pdf via konfig's ~/tmp/%.pdf rule -----------------------------
+# Inject lua.ssh content into env var LUASSH; konfig writes it to a
+# temp ~/.a2ps/lua.ssh and invokes a2ps --pretty-print=lua.
+export LUASSH := $(file < $(HOME)/gits/timm/lua/etc/lua.ssh)
+SSH := LUASSH

@@ -1,14 +1,14 @@
 <!-- Copyright (c) 2026 Tim Menzies, MIT License https://opensource.org/licenses/MIT -->
 <img xalign="right" src="https://img.shields.io/badge/Purpose-Tiny·Lua·Transpiler-7b68ee?logo=githubcopilot&logoColor=white" alt="Purpose"> <a href="https://timm.fyi"> <img xalign="right" src="https://img.shields.io/badge/Author-timm-dc143c?logo=readme&logoColor=white" alt="Author"></a> <img xalign="right" src="https://img.shields.io/badge/Language-Lua-000080?logo=lua&logoColor=white" alt="Language"><a href="https://choosealicense.com/licenses/mit/"> <img xalign="right" src="https://img.shields.io/badge/License-MIT-32cd32?logo=open-source-initiative&logoColor=white" alt="License"></a>
 
-### [http://tiny.cc/fun](http://tiny.cc/fun)
+### [http://tiny.cc/luk](http://tiny.cc/luk)
 
-<a href="http://tiny/cc/fun"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~fun~l~150.png" alt="QR"></a>
+<a href="http://tiny.cc/luk"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~luk~l~150.png" alt="QR"></a>
 
 `luk` is the **`.luk` language**: a tiny indentation-based dialect that transpiles to Lua via `luk.lua` (~100-line module). `luk.lua` returns a single function: `local lua_src = require("luk")(fun_src)`. Same Lua semantics, fewer `end`s, Python-style list comprehensions.
 
 ```bash
-git clone http://tiny.cc/fun && cd fun
+git clone http://tiny.cc/luk && cd luk
 # transpile (luk.lua is a module; one-liner driver):
 lua -e 'io.write(require("luk")(io.read("*a")))' < my.luk > my.lua
 lua my.lua                            # run
@@ -19,7 +19,7 @@ For the optimizer shipped with luk (`fft.luk`) see [fft.md](fft.md).
 
 ## NAME
 
-    fun - .luk-to-Lua transpiler (single-file, no deps)
+    luk - .luk-to-Lua transpiler (single-file, no deps)
 
 ## SYNOPSIS
 
