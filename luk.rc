@@ -10,7 +10,8 @@ luk_rtp() {
   local rtp="${TMPDIR:-/tmp}/luk-rtp-$$"
   mkdir -p "$rtp/syntax" "$rtp/ftdetect"
   ln -sf "$FUN_DIR/luk.vim" "$rtp/syntax/luk.vim"
-  printf 'au BufRead,BufNewFile *.luk setf luk\n' \
+  # force ft=luk (override shebang-based ft=lua detection)
+  printf 'au BufRead,BufNewFile *.luk setlocal ft=luk\n' \
     > "$rtp/ftdetect/luk.vim"
   echo "$rtp"
 }
@@ -21,9 +22,10 @@ vi() {
   [ -f "${KONFIG:-.}/init.lua" ] && init="-u ${KONFIG}/init.lua"
   local rtp=$(luk_rtp)
   NVIM_APPNAME="${APP:-luk}" nvim --clean $init \
+    -c "set rtp^=$rtp" \
     -c "syntax on" \
     -c "filetype plugin indent on" \
-    -c "set rtp+=$rtp" \
+    -c "runtime! ftdetect/*.vim" \
     "$@"
 }
 
