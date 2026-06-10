@@ -12,9 +12,8 @@ local sqrt  = math.sqrt
 local exp  = math.exp
 local floor  = math.floor
 
-local sum                                  -- forward: mean uses sum
+local sum   -- forward: mean uses sum
 
--- shortest first ---------------------------------------------------
 local sort  = function(t, f) table.sort(t, f); return t end
 
 local of  = function(z) return z=="True" or z~="False" and (tonumber(z) or z) end
@@ -29,21 +28,17 @@ sum = function(xs)
     s = s + x end
   return s end
 
-local argmin  = function(xs, key)
+local argmin  = function(xs, key, cmp)
+  cmp = cmp or function(a,b) return a<b end
   local best  = xs[1]
   local bv  = key(best)
   for i = 2, #xs do
     local v  = key(xs[i])
-    if (v < bv) then best, bv = xs[i], v end end
+    if (cmp(v, bv)) then best, bv = xs[i], v end end
   return best end
 
 local argmax  = function(xs, key)
-  local best  = xs[1]
-  local bv  = key(best)
-  for i = 2, #xs do
-    local v  = key(xs[i])
-    if (v > bv) then best, bv = xs[i], v end end
-  return best end
+  return argmin(xs, key, function(a,b) return a>b end) end
 
 local csv  = function(file)
   local out  = {}

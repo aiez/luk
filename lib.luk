@@ -28,21 +28,17 @@ sum = fun(xs):
     s += x
   !s
 
-argmin := fun(xs, key):
+argmin := fun(xs, key, cmp):
+  cmp = cmp or fun(a,b): !a<b end
   best := xs[1]
   bv := key(best)
   for i = 2, #xs:
     v := key(xs[i])
-    if (v < bv): best, bv = xs[i], v
+    if (cmp(v, bv)): best, bv = xs[i], v
   !best
 
 argmax := fun(xs, key):
-  best := xs[1]
-  bv := key(best)
-  for i = 2, #xs:
-    v := key(xs[i])
-    if (v > bv): best, bv = xs[i], v
-  !best
+  !argmin(xs, key, fun(a,b): !a>b end)
 
 csv := fun(file):
   out := {}
