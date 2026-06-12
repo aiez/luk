@@ -15,7 +15,7 @@ L := require("lib")
 abs, argmin, of, csv, sort := L.abs, L.argmin, L.of, L.csv, L.sort
 
 the := {seed=1234567891, p=2, bins=7, depth=4, Round=2,
-        file="../optimiz/auto93.csv"}
+        file=(os.getenv("DOOT") or "..").."/optimiz/auto93.csv"}
 
 -- forward decls (so closures can reference)
 local add, adds, disty, distys, qty, grows, show

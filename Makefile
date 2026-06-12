@@ -12,7 +12,7 @@ PKG   := lua gawk neovim tmux
 
 $(KONFIG)/Makefile:
 	@test -f $@ || { echo "missing konfig: git clone http://tiny.cc/konfig $(KONFIG)"; exit 1; }
--include $(KONFIG)/Makefile
+include $(KONFIG)/Makefile
 
 # ---- transpile rule -----------------------------------------------
 # .luk -> .lua via luk.lua library (returns transpile function)
@@ -29,7 +29,7 @@ fsh: ## luk tuned bash (konfig bashrc + luk.rc overlay)
 
 # ---- pdf: override konfig's rule, use full path to lua.ssh --------
 # Works under GNU Make 3.81 (macOS default) which lacks $(file ...).
-LUK_SSH ?= $(HOME)/gits/timm/lua/etc/lua.ssh
+LUK_SSH ?= lua.ssh
 Cols    ?= 2
 Font    ?= 9
 Orient  ?= landscape
