@@ -119,7 +119,7 @@ Lua 1.5x-2.5x faster than Python. Transpile overhead ~7ms
 ## SEE ALSO
 
     fft.md                   help page for the fft.lua app
-    http://tiny.cc/semble    Python sibling project
+    http://tiny.cc/fft       Python sibling project
     http://tiny.cc/optimiz   example CSVs
     http://tiny.cc/konfig    shared Makefile
 

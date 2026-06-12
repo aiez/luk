@@ -88,7 +88,7 @@ CLI overrides match by first letter of each key in `the` table.
 ## SEE ALSO
 
     ,luk.md                .luk language reference
-    http://tiny.cc/semble    Python sibling
+    http://tiny.cc/fft       Python sibling
     http://tiny.cc/optimiz   example CSVs
 
 ## LICENSE
