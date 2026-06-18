@@ -4,7 +4,7 @@
 -- Body after ":" = one-liner (auto end). Indent block ends on outdent.
 -- [e for v in xs] / [e for v in xs if c] = comprehension.
 
-local function comp(e,v,i,c)
+local function comprehension(e,v,i,c)
   if not v:find"," and not i:find"%(" then
     v,i = "_,"..v, "ipairs("..i..")"
   elseif not i:find"%(" then i = "pairs("..i..")" end
@@ -65,9 +65,9 @@ local function line(b)
     {"%b[]", function(m)
        local n = m:sub(2,-2)
        local e,v,i,k = n:match"^(.-) for (.-) in (.-) if (.+)$"
-       if e then return comp(e,v,i,k) end
+       if e then return comprehension(e,v,i,k) end
        e,v,i = n:match"^(.-) for (.-) in (.+)$"
-       if e then return comp(e,v,i) end
+       if e then return comprehension(e,v,i) end
        return m end},
     {"\3(%d+)\3", function(n) return s[tonumber(n)] end},
   }
