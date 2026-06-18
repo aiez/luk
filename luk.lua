@@ -23,7 +23,7 @@ local function oneLiner(r)
       or t:match"^while%s"  or t:match":=%s*fun%s*%("
       or t:match"^[%w_.%[%]\"'%-]+%s*=%s*fun%s*%(" end
 
-local function opener(s)
+local function opensBlock(s)
   if s:match"%f[%w_]then%s*$" or s:match"%f[%w_]do%s*$" then
     return true end
   local t = s:gsub("^%s+","")
@@ -95,6 +95,6 @@ return function(src)
         r = r .. " end" end
       r = line(r)
       out[#out+1] = r
-      if opener(r) and not c then stk[#stk+1] = i end end end
+      if opensBlock(r) and not c then stk[#stk+1] = i end end end
   close(-1)
   return table.concat(out, "\n") end
