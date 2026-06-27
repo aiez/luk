@@ -19,7 +19,7 @@ For the optimizer shipped with luk (`fft.luk`) see [fft.md](fft.md).
 
 **Sections:** [NAME](#name) | [SYNOPSIS](#synopsis) | [LANGUAGE REFERENCE](#language-reference) | [PERFORMANCE](#performance) | [FILES](#files) | [VIM SUPPORT](#vim-support) | [SEE ALSO](#see-also) | [LICENSE](#license) | [AUTHOR](#author)
 
-**Files:** [luk.lua](#file-luk-lua) | [fft.luk](#file-fft-luk) | [lib.luk](#file-lib-luk) | [fft.lua](#file-fft-lua) | [lib.lua](#file-lib-lua) | [fft.md](#file-fft-md) | [luk.rc](#file-luk-rc) | [luk.vim](#file-luk-vim)
+**Files:** [luk.lua](http://tiny.cc/luk#file-luk-lua) | [fft.luk](http://tiny.cc/luk#file-fft-luk) | [lib.luk](http://tiny.cc/luk#file-lib-luk) | [fft.lua](http://tiny.cc/luk#file-fft-lua) | [lib.lua](http://tiny.cc/luk#file-lib-lua) | [fft.md](http://tiny.cc/luk#file-fft-md) | [luk.rc](http://tiny.cc/luk#file-luk-rc) | [luk.vim](http://tiny.cc/luk#file-luk-vim)
 
 ## NAME
 
