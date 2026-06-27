@@ -8,7 +8,7 @@ Welford μ/σ stats. Written in `.luk` (see [,luk.md](,luk.md)
 for the language).
 
 ```bash
-git clone http://tiny.cc/optimiz && git clone http://tiny.cc/luk
+git clone https://github.com/aiez/optimiz && git clone https://github.com/aiez/luk
 cd luk && make fft.lua lib.lua
 lua fft.lua -f ../optimiz/auto93.csv
 ```
@@ -88,8 +88,8 @@ CLI overrides match by first letter of each key in `the` table.
 ## SEE ALSO
 
     ,luk.md                .luk language reference
-    http://tiny.cc/fft       Python sibling
-    http://tiny.cc/optimiz   example CSVs
+    https://github.com/aiez/fft       Python sibling
+    https://github.com/aiez/optimiz   example CSVs
 
 ## LICENSE
 

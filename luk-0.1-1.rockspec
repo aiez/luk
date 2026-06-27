@@ -2,7 +2,7 @@ package = "luk"
 version = "0.1-1"
 
 source = {
-  url = "git+https://tiny.cc/luk",
+  url = "git+https://github.com/aiez/luk",
 }
 
 description = {
@@ -17,10 +17,10 @@ description = {
       local lua_src = luk(fun_src)
 
     Worked example (fft.luk, a multi-objective regression tree)
-    at http://tiny.cc/luk.
+    at https://github.com/aiez/luk.
   ]],
   license    = "MIT",
-  homepage   = "http://tiny.cc/luk",
+  homepage   = "https://github.com/aiez/luk",
   maintainer = "Tim Menzies <timm@ieee.org>",
 }
 

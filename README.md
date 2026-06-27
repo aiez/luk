@@ -1,14 +1,14 @@
 <!-- Copyright (c) 2026 Tim Menzies, MIT License https://opensource.org/licenses/MIT -->
 <img align="right" src="https://img.shields.io/badge/Purpose-Tiny·Lua·Transpiler-7b68ee?logo=githubcopilot&logoColor=white" alt="Purpose"> <a href="https://timm.fyi"> <img align="right" src="https://img.shields.io/badge/Author-timm-dc143c?logo=readme&logoColor=white" alt="Author"></a> <img align="right" src="https://img.shields.io/badge/Language-Lua-000080?logo=lua&logoColor=white" alt="Language"><a href="https://choosealicense.com/licenses/mit/"> <img align="right" src="https://img.shields.io/badge/License-MIT-32cd32?logo=open-source-initiative&logoColor=white" alt="License"></a>
 
-### [http://tiny.cc/luk](http://tiny.cc/luk)
+### [https://github.com/aiez/luk](https://github.com/aiez/luk)
 
-<a href="http://tiny.cc/luk"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~luk~l~150.png" alt="QR"></a>
+<a href="https://github.com/aiez/luk"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~luk~l~150.png" alt="QR"></a>
 
 `luk` is the **`.luk` language**: a tiny indentation-based dialect that transpiles to Lua via `luk.lua` (~100-line module). `luk.lua` returns a single function: `local lua_src = require("luk")(fun_src)`. Same Lua semantics, fewer `end`s, Python-style list comprehensions.
 
 ```bash
-git clone http://tiny.cc/luk && cd luk
+git clone https://github.com/aiez/luk && cd luk
 # transpile (luk.lua is a module; one-liner driver):
 lua -e 'io.write(require("luk")(io.read("*a")))' < my.luk > my.lua
 lua my.lua                            # run
@@ -19,7 +19,7 @@ For the optimizer shipped with luk (`fft.luk`) see [fft.md](fft.md).
 
 **Sections:** [NAME](#name) | [SYNOPSIS](#synopsis) | [LANGUAGE REFERENCE](#language-reference) | [PERFORMANCE](#performance) | [FILES](#files) | [VIM SUPPORT](#vim-support) | [SEE ALSO](#see-also) | [LICENSE](#license) | [AUTHOR](#author)
 
-**Files:** [luk.lua](http://tiny.cc/luk#file-luk-lua) | [fft.luk](http://tiny.cc/luk#file-fft-luk) | [lib.luk](http://tiny.cc/luk#file-lib-luk) | [fft.lua](http://tiny.cc/luk#file-fft-lua) | [lib.lua](http://tiny.cc/luk#file-lib-lua) | [fft.md](http://tiny.cc/luk#file-fft-md) | [luk.rc](http://tiny.cc/luk#file-luk-rc) | [luk.vim](http://tiny.cc/luk#file-luk-vim)
+**Files:** [luk.lua](https://github.com/aiez/luk#file-luk-lua) | [fft.luk](https://github.com/aiez/luk#file-fft-luk) | [lib.luk](https://github.com/aiez/luk#file-lib-luk) | [fft.lua](https://github.com/aiez/luk#file-fft-lua) | [lib.lua](https://github.com/aiez/luk#file-lib-lua) | [fft.md](https://github.com/aiez/luk#file-fft-md) | [luk.rc](https://github.com/aiez/luk#file-luk-rc) | [luk.vim](https://github.com/aiez/luk#file-luk-vim)
 
 ## NAME
 
@@ -119,9 +119,9 @@ Lua 1.5x-2.5x faster than Python. Transpile overhead ~7ms
 ## SEE ALSO
 
     fft.md                   help page for the fft.lua app
-    http://tiny.cc/fft       Python sibling project
-    http://tiny.cc/optimiz   example CSVs
-    http://tiny.cc/konfig    shared Makefile
+    https://github.com/aiez/fft       Python sibling project
+    https://github.com/aiez/optimiz   example CSVs
+    https://github.com/aiez/konfig    shared Makefile
 
 ## LICENSE
 

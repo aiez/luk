@@ -23,7 +23,7 @@ so konfig's pdf rule writes an empty `lua.ssh` and a2ps errors out.
 
 ## ,luk.md doc audit
 
-- [x] tiny.cc/fun -> tiny.cc/luk URLs
+- [x] tiny.cc/fun -> https://github.com/aiez/luk URLs
 - [x] "fun -" title -> "luk -"
 - [ ] verify SYNOPSIS code blocks all use `luk` (not `funny`)
 - [ ] VIM SUPPORT section: confirm `luk.vim` path is correct
