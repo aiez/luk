@@ -3,8 +3,6 @@
 
 ### [https://github.com/aiez/luk](https://github.com/aiez/luk)
 
-<a href="https://github.com/aiez/luk"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~luk~l~150.png" alt="QR"></a>
-
 `luk` is the **`.luk` language**: a tiny indentation-based dialect that transpiles to Lua via `luk.lua` (~100-line module). `luk.lua` returns a single function: `local lua_src = require("luk")(fun_src)`. Same Lua semantics, fewer `end`s, Python-style list comprehensions.
 
 ```bash
