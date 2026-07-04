@@ -1,100 +1,73 @@
--- luk.lua : ".luk" -> Lua transpiler. Returns transpile fn.
--- fun=function  !=return  NAME:=V  ->  local NAME=V
--- if (c): elseif (c): else: for X in Y: while c: fun(a):
--- Body after ":" = one-liner (auto end). Indent block ends on outdent.
--- [e for v in xs] / [e for v in xs if c] = comprehension.
+-- luk.lua : whole-source ".luk" -> Lua transpiler. One file, two modes:
+--   require"luk"             -> installs require() hook for .luk modules
+--                               (chunk name @foo.luk = real error lines),
+--                               returns the transpile fn
+--   lua luk.lua <in >out     -> stdin/stdout filter
+-- Not line-based. Blocks stay pure Lua (then/do/else/end).
+-- fn=function  "!=" = ~=   NAME:=V -> local NAME=V
+-- ^ = return, only at statement start: line start, or after
+-- ";" / "then" / "do" / "else" / "function(...)". Infix a^b untouched.
+-- [e for v in xs] / [e for v in xs if c]     = list comprehension
+-- {k,v for k,v in xs} / {.. if c}            = dict comprehension
+-- Comprehensions may span lines. Limits: no nesting them;
+-- dict key expr must not contain a bare comma.
 
-local function comprehension(e,v,i,c)
+local function comprehension(a,v,i,c)
   if not v:find"," and not i:find"%(" then
     v,i = "_,"..v, "ipairs("..i..")"
   elseif not i:find"%(" then i = "pairs("..i..")" end
   local g = c and ("if "..c.." then ") or ""
   local z = c and "end " or ""
   return ("(function() local _r={} for %s in %s "..
-          "do %s_r[#_r+1]=%s %send return _r end)()"
-         ):format(v,i,g,e,z) end
+          "do %s%s %send return _r end)()"):format(v,i,g,a,z) end
 
-local function oneLiner(r)
-  if not r:find":%s+%S" or r:find"%f[%w_]end%f[%W]" then
-    return false end
-  local t = r:gsub("^%s+","")
-  return t:match"^if%s*%(" or t:match"^elseif%s*%("
-      or t:match"^else%s*:" or t:match"^for%s"
-      or t:match"^while%s"  or t:match":=%s*fun%s*%("
-      or t:match"^[%w_.%[%]\"'%-]+%s*=%s*fun%s*%(" end
+local function body(n)  -- "E for V in I [if C]" -> E,V,I,C?
+  local e,v,i,c = n:match"^(.-) for (.-) in (.-) if (.+)$"
+  if not e then e,v,i = n:match"^(.-) for (.-) in (.+)$" end
+  return e,v,i,c end
 
-local function opensBlock(s)
-  if s:match"%f[%w_]then%s*$" or s:match"%f[%w_]do%s*$" then
-    return true end
-  local t = s:gsub("^%s+","")
-  return t:match"^local%s+[%w_.,%s]+%s*=%s*function%b()%s*$"
-      or t:match"^[%w_.%[%]\"'%-]+%s*=%s*function%b()%s*$"
-      or t:match"^return%s+function%b()%s*$" end
-
-local function cont(r) return r:match"^%s*else" end
-local function ind(s) return #(s:match"^%s*":gsub("\t","  ")) end
-
-local function line(b)
-  if b:match"^%s*%-%-" or b:match"^%s*$" or b:match"^#!" then
-    return b end
-  local s, c = {}, ""
+local function transpile(src)
+  local s = {}
   local function hide(m) s[#s+1]=m; return "\3"..#s.."\3" end
   local R = {
-    {'%[%[.-%]%]', hide},
-    {'"[^"]*"',    hide},
-    {"'[^']*'",    hide},
-    {"(%s*%-%-.*)$", function(x) c=x; return "" end},
-    {"^(%s*)([%w_][%w_,%s]*)%s*:=",   "%1local %2 ="},
-    {"^(%s*)([%w_.]+)%s*([%+%-%*/])=%s+",
-                                      "%1%2 = %2 %3 "},
-    {"%f[%w_]fun%f[%W]",              "function"},
-    {"%f[%w_]if%s+(.+)%s*:%s*$",      "if %1 then"},
-    {"%f[%w_]if%s+(.+)%s*:(%s)",      "if %1 then%2"},
-    {"%f[%w_]elseif%s+(.+)%s*:%s*$",  "elseif %1 then"},
-    {"%f[%w_]elseif%s+(.+)%s*:(%s)",  "elseif %1 then%2"},
-    {"(%f[%w_]for%s.+)%s*:%s*$",      "%1 do"},
-    {"(%f[%w_]for%s.+)%s*:(%s)",      "%1 do%2"},
-    {"(%f[%w_]while%s.+)%s*:%s*$",    "%1 do"},
-    {"(%f[%w_]while%s.+)%s*:(%s)",    "%1 do%2"},
-    {"function%s*(%b())%s*:%s*$",     "function%1"},
-    {"function%s*(%b())%s*:(%s)",     "function%1%2"},
-    {"(%f[%w_]else)%s*:%s*$",         "%1"},
-    {"(%f[%w_]else)%s*:(%s)",         "%1%2"},
-    {"!=",                            "~="},
-    {"!%s*",                          "return "},
+    {"(%-%-%[(=*)%[.-%]%2%])", hide},   -- long comments
+    {"(%[(=*)%[.-%]%2%])",     hide},   -- long strings
+    {'"[^"\n]*"',              hide},
+    {"'[^'\n]*'",              hide},
+    {"%-%-[^\n]*",             hide},   -- line comments
+    {"!=",                     "~="},
+    {"%f[%w_]fn%f[%W]",        "function"},
+    {"(\n[ \t]*)%^[ \t]*",     "%1return "},
+    {"(;[ \t]*)%^[ \t]*",      "%1return "},
+    {"(%f[%w_]then%f[%W][ \t]*)%^[ \t]*",       "%1return "},
+    {"(%f[%w_]do%f[%W][ \t]*)%^[ \t]*",         "%1return "},
+    {"(%f[%w_]else%f[%W][ \t]*)%^[ \t]*",       "%1return "},
+    {"(function[%w_.: \t]*%b()[ \t]*)%^[ \t]*", "%1return "},
+    {"([^%w_.])([%w_][%w_, \t]*):=", "%1local %2="},
+    {"%b{}", function(m)
+       local e,v,i,c = body(m:sub(2,-2))
+       local k,ve; if e then k,ve = e:match"^(.-),(.+)$" end
+       if k then return comprehension("_r["..k.."]="..ve,v,i,c) end
+       return m end},
     {"%b[]", function(m)
-       local n = m:sub(2,-2)
-       local e,v,i,k = n:match"^(.-) for (.-) in (.-) if (.+)$"
-       if e then return comprehension(e,v,i,k) end
-       e,v,i = n:match"^(.-) for (.-) in (.+)$"
-       if e then return comprehension(e,v,i) end
+       local e,v,i,c = body(m:sub(2,-2))
+       if e then return comprehension("_r[#_r+1]="..e,v,i,c) end
        return m end},
     {"\3(%d+)\3", function(n) return s[tonumber(n)] end},
   }
-  for _,p in ipairs(R) do b = b:gsub(p[1], p[2]) end
-  return b..c end
+  src = "\n"..src
+  for _,p in ipairs(R) do src = src:gsub(p[1],p[2]) end
+  return src:sub(2) end
 
-return function(src)
-  local out, stk = {}, {}
-  local function close(i)
-    while #stk>0 and stk[#stk] >= i do
-      stk[#stk] = nil
-      local k = #out
-      while k>0 and (out[k]:match"^%s*$"
-                  or out[k]:match"^%s*%-%-") do k = k-1 end
-      if k>0 then out[k] = out[k] .. " end"
-      else        out[#out+1] = "end" end end end
-  for r0 in (src.."\n"):gmatch"([^\n]*)\n" do
-    local r = r0
-    if r:match"^%s*$" then out[#out+1] = r
-    elseif r:match"^%s*%-%-" then close(ind(r)); out[#out+1] = r
-    else
-      local i, c = ind(r), cont(r)
-      close(c and i+1 or i)
-      if oneLiner(r) and not c and not r:match"%f[%w_]end%s*$" then
-        r = r .. " end" end
-      r = line(r)
-      out[#out+1] = r
-      if opensBlock(r) and not c then stk[#stk+1] = i end end end
-  close(-1)
-  return table.concat(out, "\n") end
+if ... then                        -- require"luk": add .luk loader
+  table.insert(package.searchers or package.loaders, 2, function(name)
+    name = name:gsub("%.luk$", "")   -- allow require"xx.luk"
+    local path, err = package.searchpath(
+      name, (package.path:gsub("%.lua", ".luk")))
+    if not path then return err end
+    local f = assert(io.open(path))
+    local src = f:read"*a"; f:close()
+    return assert(load(transpile(src), "@"..path)), path end)
+  return transpile
+else                               -- lua luk.lua <IN.luk >OUT.lua
+  io.write(transpile(io.read"*a")) end

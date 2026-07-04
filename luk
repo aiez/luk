@@ -1,0 +1,21 @@
+#!/usr/bin/env lua
+-- luk : transpile-and-run for .luk files.
+-- usage: luk FILE.luk [args...]   transpile, run (args passed through)
+--        luk -d FILE.luk          dump generated Lua to stdout
+-- Installs the require() hook, so scripts can require .luk modules.
+
+package.path = (arg[0]:gsub("[^/]*$", "")) .. "?.lua;" .. package.path
+local transpile = require"luk"
+
+local i = arg[1] == "-d" and 2 or 1
+local file = arg[i]
+local f = file and io.open(file)
+if not f then
+  io.stderr:write("usage: luk [-d] FILE.luk [args...]\n"); os.exit(1) end
+local lua = transpile(f:read"*a"); f:close()
+if i == 2 then io.write(lua); os.exit(0) end
+
+local a = {[0] = file}
+for j = 2, #arg do a[#a+1] = arg[j] end
+arg = a
+assert(load(lua, "@"..file))(table.unpack(a))

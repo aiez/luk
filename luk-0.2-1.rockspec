@@ -1,20 +1,21 @@
 package = "luk"
-version = "0.1-1"
+version = "0.2-1"
 
 source = {
   url = "git+https://github.com/aiez/luk",
 }
 
 description = {
-  summary  = "tiny .luk -> Lua transpiler (~100-line module)",
+  summary  = "tiny .luk -> Lua transpiler (~70-line module)",
   detailed = [[
-    luk is the .luk language: a tiny indentation-based dialect
-    that transpiles to Lua. Same Lua semantics, fewer `end`s,
-    Python-style list comprehensions.
+    luk is the .luk language: Lua plus `fn`, `^` for return,
+    `:=` locals, `!=`, and Python-style comprehensions. Blocks
+    stay pure Lua (then/do/else/end).
 
-    The module returns a single function:
+    The module returns a single function and installs a
+    require() hook for .luk modules:
       local luk = require("luk")
-      local lua_src = luk(fun_src)
+      local lua_src = luk(luk_src)
 
     Worked example (fft.luk, a multi-objective regression tree)
     at https://github.com/aiez/luk.

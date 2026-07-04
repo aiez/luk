@@ -9,8 +9,7 @@ for the language).
 
 ```bash
 git clone https://github.com/aiez/optimiz && git clone https://github.com/aiez/luk
-cd luk && make fft.lua lib.lua
-lua fft.lua -f ../optimiz/auto93.csv
+cd luk && ./luk fft.luk -f ../optimiz/auto93.csv
 ```
 
 ## NAME
@@ -19,8 +18,8 @@ lua fft.lua -f ../optimiz/auto93.csv
 
 ## SYNOPSIS
 
-    make fft.lua lib.lua                    # transpile
-    lua fft.lua [-flag VAL]... [--TEST]     # run
+    ./luk fft.luk [-flag VAL]... [--TEST]   # transpile + run
+    make fft.lua lib.lua                    # transpile only
 
 ## OPTIONS
 
@@ -75,7 +74,7 @@ CLI overrides match by first letter of each key in `the` table.
     Data = {names, x, y, goal, cols, rows} -- no metatable
 
     Helpers in lib.luk:
-      argmin, argmax, sum, mean, sort, keys
+      argmin, sum, sort
       of (string -> number/bool/string)
       csv (file -> list of rows)
       abs, max, min, sqrt, exp, floor (math aliases)

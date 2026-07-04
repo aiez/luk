@@ -3,14 +3,17 @@
 
 ### [https://github.com/aiez/luk](https://github.com/aiez/luk)
 
-`luk` is the **`.luk` language**: a tiny indentation-based dialect that transpiles to Lua via `luk.lua` (~100-line module). `luk.lua` returns a single function: `local lua_src = require("luk")(fun_src)`. Same Lua semantics, fewer `end`s, Python-style list comprehensions.
+`luk` is the **`.luk` language**: Lua plus `fn`, `^` for return,
+`:=` locals, `!=`, and Python-style comprehensions. Blocks stay
+pure Lua (`then/do/else/end`), so any Lua is (almost) valid luk.
+One ~70-line module, `luk.lua`, does whole-source transpilation
+and installs a `require()` hook for `.luk` modules.
 
 ```bash
 git clone https://github.com/aiez/luk && cd luk
-# transpile (luk.lua is a module; one-liner driver):
-lua -e 'io.write(require("luk")(io.read("*a")))' < my.luk > my.lua
-lua my.lua                            # run
-make my.lua                           # via Makefile
+./luk fft.luk                 # transpile + run, args pass through
+./luk -d fft.luk > fft.lua    # dump generated Lua
+make fft.lua                  # same, via Makefile
 ```
 
 For the optimizer shipped with luk (`fft.luk`) see [fft.md](fft.md).
@@ -25,70 +28,66 @@ For the optimizer shipped with luk (`fft.luk`) see [fft.md](fft.md).
 
 ## SYNOPSIS
 
+    ./luk FILE.luk [args...]     # transpile + run
+    ./luk -d FILE.luk            # dump generated Lua
     lua -e 'io.write(require"luk"(io.read"*a"))' <IN.luk >OUT.lua
     -- or programmatically:
-    --   local lua_src = require("luk")(fun_src)
+    --   local lua_src = require("luk")(luk_src)
+
+Requiring `luk` also installs a `require()` hook: `require"xx"`
+loads `xx.luk` if present (transpiled, with real error line
+numbers), else falls back to plain Lua. `require"xx.luk"` forces
+the `.luk` version.
 
 ## LANGUAGE REFERENCE
 
-### Keywords (whole-word substitution)
+Blocks are pure Lua: `if c then ... else ... end`,
+`for ... do ... end`, `while ... do ... end`. Everything below is
+whole-source token rewriting; strings and comments are hidden
+first, so sigils inside them are safe.
 
-    fun                -> function
-    !                  -> return
+### Keywords
+
+    fn                 -> function
     !=                 -> ~=     (Lua's not-equal)
+
+### Return
+
+    ^ EXPR             -> return EXPR
+
+`^` means return only at a statement start: start of line, or
+after `;`, `then`, `do`, `else`, or a `fn(...)` parameter list.
+Infix exponentiation `a^b` is untouched.
+
+    double := fn(z) ^ z * 2 end
+    pick   := fn(b) if b then ^ "yes" else ^ "no" end end
 
 ### Local declarations
 
     NAME := EXPR       -> local NAME = EXPR
     A, B := X, Y       -> local A, B = X, Y
 
-### Compound assignment (start of line)
+### Comprehensions (may span lines; no nesting)
 
-    X += V             -> X = X + V
-    X -= V             -> X = X - V
-    X *= V             -> X = X * V
-    X /= V             -> X = X / V
-
-### Block openers (use ":" at EOL or before body)
-
-    if (cond):         -> if cond then
-    elseif (cond):     -> elseif cond then
-    else:              -> else
-    for X in Y:        -> for X in Y do
-    for i = a, b:      -> for i = a, b do
-    while cond:        -> while cond do
-    fun (args):        -> function(args)
-    NAME := fun (a):   -> local NAME = function(a)
-
-### Block bodies
-
-  - Same line after `:` = one-liner, auto-appends ` end`.
-  - Indented next lines = multi-line; outdent emits ` end`.
-  - Continuation lines starting with `else`/`elseif`
-    do NOT trigger the outdent close.
-  - Lone ` end` lines are folded onto the previous code line
-    (skipping blank lines and comments).
-  - Inline anonymous `fun` in expressions needs explicit `end`:
-
-        cb := fun (x): ! x*2 end
-
-### List comprehensions (Python-style, inside `[ ]`)
-
-    [EXPR for V in ITER]
+    [EXPR for V in ITER]              -- list
     [EXPR for V in ITER if COND]
-    [EXPR for K,V in ITER]            -- 2 loop vars -> pairs
+    {K, V for K, V in ITER}           -- dict
+    {K, V for K, V in ITER if COND}
 
-  ITER auto-wrapping inside comprehensions:
+  ITER auto-wrapping:
 
     - 1 var, no "(" in ITER  -> ipairs(ITER)
     - 2 vars, no "(" in ITER -> pairs(ITER)
     - else passed through as-is
 
+  Limit: a dict comprehension's key expression must not contain
+  a bare comma.
+
 ### Misc
 
-  - Strings/comments are hidden during substitution, so sigils
-    inside them are safe: `print("hi!")` stays untouched.
-  - Shebang `#!...` at top is rewritten to `--...`.
+  - No compound assignment: write `x = x + 1`, not `x += 1`.
+  - No shebang line in `.luk` files (load() rejects `#`).
+  - Long strings/comments `[[...]]` pass through untouched.
 
 ## PERFORMANCE
 
@@ -96,23 +95,25 @@ Runtime, default mode (depth=4, 16 trees built):
 
     file       rows    fft.py   fft.lua  fft.luk (transpile+run)
     --------   -----   ------   ------   -----------------------
-    auto93     398     0.080s   0.032s   0.039s
-    SS-N      53663    9.18s    6.24s    6.11s
+    auto93     398     0.080s   0.038s   0.035s
+    SS-N      53663    9.18s    5.86s    6.15s
 
-Lua 1.5x-2.5x faster than Python. Transpile overhead ~7ms
-(constant, negligible on any real workload).
+Lua 1.5x-2.5x faster than Python. Transpile is whole-source
+gsub, ~1ms for a 250-line file: negligible on any real workload.
 
 ## FILES
 
-    luk.lua      .luk -> .lua transpiler (filter)
+    luk.lua      .luk -> .lua transpiler + require() hook
+    luk          runner: transpile + run (./luk FILE.luk)
     lib.luk      "battery" helpers (argmin, sum, csv, of, ...)
     fft.luk      example: multi-objective regression tree
     Makefile     rule:  %.lua: %.luk luk.lua
+    sandbox/     retired v0.1 indentation-based dialect (luk2)
 
 ## VIM SUPPORT
 
-    syntax: http://tiny.cc/timm-lua  -> etc/syntax/luk.vim
-    nvim init at etc/nvimluk.lua.
+    syntax: luk.vim (Lua syntax + luk overlay)
+    shell with .luk-aware vi: make fsh (see luk.rc)
 
 ## SEE ALSO
 

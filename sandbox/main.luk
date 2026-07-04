@@ -1,0 +1,6 @@
+-- main.luk : CLI + hook test. Usage: luk main.luk A B ...
+m := require"mylib"
+print("tri(10)", m.tri(10))
+print("evens", table.concat(m.evens{1,2,3,4,5,6}, " "))
+print("args", arg[0], ...)
+if arg[1] == "boom" then error("bang") end

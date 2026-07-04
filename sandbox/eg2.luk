@@ -1,0 +1,73 @@
+-- eg2.luk : luk2 smoke test. Every feature once.
+n := 0
+ok := fn(test, msg)
+  n = n + 1
+  if test then print("ok  " .. n .. " " .. msg)
+  else print("FAIL" .. n .. " " .. msg) os.exit(1) end
+end
+
+-- := local
+x, y := 10, 20
+ok(x == 10 and y == 20, ":= multi")
+
+-- fn + ^ one-liner body (return after param list)
+double := fn(z) ^ z * 2 end
+ok(double(21) == 42, "fn / ^ after params")
+
+-- ^ at line start
+triple := fn(z)
+  ^ z * 3
+end
+ok(triple(5) == 15, "^ line start")
+
+-- ^ after then / else
+pick := fn(b) if b then ^ "yes" else ^ "no" end end
+ok(pick(true) == "yes" and pick(false) == "no", "^ then/else")
+
+-- ^ after ;
+bump := fn() q := 1; ^ q + 1 end
+ok(bump() == 2, "^ after ;")
+
+-- infix exponent untouched
+ok(2^10 == 1024 and (2+1)^2 == 9, "a^b exponent survives")
+
+-- != is ~=
+ok(1 != 2, "!= not-equal")
+
+-- strings untouched
+msg := "fn ^ := [a for b in c] != all safe here"
+ok(#msg == 39, "sigils hidden in strings")
+
+-- long string, multi-line, sigils at line start inside
+raw := [[
+^ fn :=
+]]
+ok(raw:find("fn :=", 1, true) ~= nil, "long string untouched")
+
+-- plain tables + indexing pass through
+t := {10, 20, 30}
+ok(t[2] == 20, "table / index pass-through")
+
+-- list comprehension
+sq := [v * v for v in t]
+ok(sq[3] == 900, "list comp")
+
+-- list comp + if
+big := [v for v in t if v > 15]
+ok(#big == 2 and big[1] == 20, "list comp if")
+
+-- multi-line list comp
+longer := [v + 1
+           for v in t
+           if v > 10]
+ok(#longer == 2 and longer[2] == 31, "multi-line comp")
+
+-- dict comprehension
+inv := {v, k for k, v in t}
+ok(inv[30] == 3, "dict comp")
+
+-- dict comp + if
+some := {k, v * 2 for k, v in t if v != 20}
+ok(some[1] == 20 and some[2] == nil and some[3] == 60, "dict comp if")
+
+print("all pass")
