@@ -27,8 +27,7 @@ local add, adds, disty, qty, grows, show
 
 -- 1. Columns ------------------------------------------------
 Sym := fn() ^ {symp=true, has={}} end
-Num := fn(n, mu, m2)
-  ^ {nump=true, n=n or 0, mu=mu or 0, m2=m2 or 0} end
+Num := fn(n,mu,m2) ^{nump=true,n=n or 0,mu=mu or 0,m2=m2 or 0} end
 
 sd := fn(num)
   if num.n < 2 then ^ 0 end
