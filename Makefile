@@ -34,15 +34,24 @@ Cols    ?= 2
 Font    ?= 9
 Orient  ?= landscape
 
+define pdf_recipe
+@mkdir -p $(@D)
+@echo "pdfing : $@ ..."
+@a2ps -Bj --$(Orient) --line-numbers=1 --highlight-level=heavy \
+      --borders=no --pro=color \
+      --left-footer="" --right-footer="" --footer="page %p." \
+      --pretty-print=$(LUK_SSH) -M letter \
+      --font-size=$(Font) --columns=$(Cols) \
+      -o - $< 2> >(grep -v '^a2ps:/' >&2) \
+  | ps2pdf - $@
+@echo "wrote $@"
+@open $@
+endef
+
 $(HOME)/tmp/%.pdf: %.luk
-	@mkdir -p $(HOME)/tmp
-	@echo "pdfing : $@ ..."
-	@a2ps -Bj --$(Orient) --line-numbers=1 --highlight-level=heavy \
-	      --borders=no --pro=color \
-	      --left-footer="" --right-footer="" --footer="page %p." \
-	      --pretty-print=$(LUK_SSH) -M letter \
-	      --font-size=$(Font) --columns=$(Cols) \
-	      -o - $< 2> >(grep -v '^a2ps:/' >&2) \
-	  | ps2pdf - $@
-	@echo "wrote $@"
-	@open $@
+	$(pdf_recipe)
+
+# also claim konfig's ~/tmp/konfig/%.pdf target (its SSH env-var
+# scheme needs Make >= 4.0; this uses the local lua.ssh instead)
+$(HOME)/tmp/konfig/%.pdf: %.luk
+	$(pdf_recipe)

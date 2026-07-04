@@ -1,25 +1,15 @@
 # TODO
 
-## PDF printing broken
+## PDF printing (FIXED locally, konfig still affected)
 
-`make ~/tmp/fft.pdf` falls back to plain style — no Lua syntax color.
+Was: `make ~/tmp/fft.pdf` / `make ~/tmp/konfig/fft.pdf` fell back
+to plain style. GNU Make 3.81 (macOS default) lacks the `$(file <)`
+konfig's SSH env-var scheme relies on.
 
-Root cause: GNU Make 3.81 (macOS default) lacks `$(file < FILE)` (added
-in Make 4.0). The `export LUASSH := $(file < lua.ssh)` returns empty,
-so konfig's pdf rule writes an empty `lua.ssh` and a2ps errors out.
-
-**Fixes (pick one):**
-
-- Install newer Make (`brew install make`, use `gmake`).
-- Read lua.ssh in the recipe via shell, not Make's `$(file ...)`:
-
-      $(HOME)/tmp/%.pdf: %.luk
-          LUASSH="$$(cat $(LUK_SSH))" $(MAKE) -f $(KONFIG)/Makefile $@
-
-- Symlink/copy `lua.ssh` system-wide:
-
-      sudo cp $(HOME)/gits/timm/lua/etc/lua.ssh \
-        /opt/homebrew/opt/a2ps/share/a2ps/sheets/
+Fixed in luk's Makefile: local pattern rules for BOTH pdf targets
+use `--pretty-print=lua.ssh` (cwd file) directly; shared
+`pdf_recipe` define. Konfig's own SSH scheme still needs Make >= 4
+for other repos.
 
 ## ,luk.md doc audit
 
