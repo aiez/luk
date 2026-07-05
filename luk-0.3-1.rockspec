@@ -32,5 +32,5 @@ dependencies = { "lua >= 5.3" }
 build = {
   type    = "builtin",
   modules = { luk = "luk.lua" },
-  install = { conf = { ",luk.md", "luk.vim" } },
+  install = { conf = { "README.md", "luk.vim" } },
 }
