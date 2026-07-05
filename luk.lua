@@ -110,8 +110,8 @@ local function transpile(src)
 if ... then                        -- require"luk": add .luk loader
   table.insert(package.searchers or package.loaders, 2, function(name)
     name = name:gsub("%.luk$", "")   -- allow require"xx.luk"
-    local path, err = package.searchpath(
-      name, (package.path:gsub("%.lua", ".luk")))
+    local path, err = package.searchpath(  -- ".lua" only at entry ends:
+      name, (package.path:gsub("%.lua;", ".luk;"):gsub("%.lua$", ".luk")))
     if not path then return err end
     local f = assert(io.open(path))
     local src = f:read"*a"; f:close()
