@@ -1,5 +1,5 @@
--- vim: ft=lua ts=2 sw=2 sts=2 et :
--- lib.luk: Lua "battery" for .luk programs. End syntax.
+-- vim: ft=luk ts=2 sw=2 sts=2 et :
+-- lib.luk: Lua "battery" for .luk programs. Colon syntax.
 -- usage:  L := require("lib")
 --         abs, argmin = L.abs, L.argmin   -- or use L.abs
 
@@ -9,32 +9,145 @@ getmetatable("").__index.fmt = string.format
 abs, max, min := math.abs, math.max, math.min
 sqrt, exp, floor := math.sqrt, math.exp, math.floor
 
-sort := fn(t, f) table.sort(t, f); ^ t end
+-- forward decls (recursive fns)
+local o, deepCopy
 
-of := fn(z) ^ z=="True" or z~="False" and (tonumber(z) or z) end
+-- 1. rand: portable Park-Miller PRNG; seeded runs match anywhere
+Seed := 1
 
-sum := fn(xs)
-  s := 0
-  for _, x in ipairs(xs) do s = s + x end
-  ^ s end
+srand := fn(n):             -- set seed (any integer)
+  Seed = (n or 1) % 2147483647
+  if Seed == 0: Seed = 1
 
-argmin := fn(xs, key)
-  best, bv := xs[1], key(xs[1])
-  for i = 2, #xs do
-    v := key(xs[i])
-    if v < bv then best, bv = xs[i], v end end
-  ^ best end
+rand := fn(n):              -- rand() -> [0,1); rand(n) -> 1..n
+  Seed = (16807 * Seed) % 2147483647
+  r := Seed / 2147483647
+  ^ n and floor(r * n) + 1 or r
 
-csv := fn(file)
+any := fn(t): ^ t[rand(#t)]
+
+shuffle := fn(t):           -- Fisher-Yates, in place; returns t
+  for i = #t, 2, -1:
+    j := rand(i)
+    t[i], t[j] = t[j], t[i]
+  ^ t
+
+-- 2. lists
+push := fn(t, x): t[#t+1] = x; ^ x
+
+sort := fn(t, f): table.sort(t, f); ^ t
+
+keys := fn(t): ^ [k for k, _ in t]
+
+order := fn(t):             -- sorted-key iteration (lists: ipairs)
+  if #t > 0: ^ ipairs(t)
+  u := sort(keys(t))
+  j := 0
+  ^ fn():
+    j = j + 1
+    if u[j]: ^ u[j], t[u[j]]
+
+nth := fn(n): ^ fn(t): ^ t[n]
+lt  := fn(n): ^ fn(a, b): ^ a[n] < b[n]
+gt  := fn(n): ^ fn(a, b): ^ a[n] > b[n]
+
+keysort := fn(t, f, cmp):   -- sort by f-derived key (DSU)
+  d := sort([{f(x), x} for x in t], (cmp or lt)(1))
+  ^ [pair[2] for pair in d]
+
+slice := fn(t, lo, hi):     -- t[lo..hi]; negatives from the end
+  n := #t
+  lo := lo or 1
+  hi := hi or n
+  if lo < 0: lo = n + 1 + lo
+  if hi < 0: hi = n + 1 + hi
+  if hi > n: hi = n
   u := {}
-  for ln in io.lines(file) do
-    ln := ln:gsub("^%s+", ""):gsub("%s+$", "")
-    if #ln > 0 and ln:sub(1,1) ~= "#" then
-      row := {}
-      for x in ln:gmatch("[^,]+") do row[#row+1] = of(x) end
-      u[#u+1] = row end end
-  ^ u end
+  for i = lo, hi: u[#u+1] = t[i]
+  ^ u
 
-^ {abs=abs, max=max, min=min, sqrt=sqrt, exp=exp,
-   floor=floor, argmin=argmin, sum=sum, sort=sort,
-   of=of, csv=csv}
+-- 3. objects
+new := fn(mt, t): mt.__index = mt; ^ setmetatable(t, mt)
+
+deepCopy = fn(t, seen):     -- keeps metatables, survives cycles
+  if type(t) ~= "table": ^ t
+  if seen and seen[t]: ^ seen[t]
+  seen := seen or {}
+  u := {}
+  seen[t] = u
+  for k, v in pairs(t): u[deepCopy(k, seen)] = deepCopy(v, seen)
+  ^ setmetatable(u, getmetatable(t))
+
+-- 4. strings
+of := fn(z): ^ z=="True" or z~="False" and (tonumber(z) or z)
+
+o = fn(x):                  -- pretty print; sorted dict keys
+  if type(x) == "number":
+    if floor(x) == x: ^ floor(x)
+    ^ ("%.2f"):fmt(x)
+  if type(x) ~= "table": ^ tostring(x)
+  u := #x > 0 and [o(v) for v in x]
+       or sort([k .. "=" .. o(v) for k, v in x])
+  ^ "{" .. table.concat(u, ", ") .. "}"
+
+o2 := fn(s, x): print(s .. " =", o(x)); ^ x
+
+-- 5. maths
+sum := fn(xs):
+  s := 0
+  for _, x in ipairs(xs): s = s + x
+  ^ s
+
+argmin := fn(xs, key):
+  best, bv := xs[1], key(xs[1])
+  for i = 2, #xs:
+    v := key(xs[i])
+    if v < bv: best, bv = xs[i], v
+  ^ best
+
+-- 6. files
+path := fn(s):              -- expand leading $DOOT and ~
+  home := os.getenv("HOME") or "~"
+  s = s:gsub("^%$DOOT", os.getenv("DOOT") or "..")
+  ^ (s:gsub("^~", home))
+
+csv := fn(file):            -- iterate rows; cells coerced via of()
+  f := assert(io.open(path(file)), "cannot open: " .. file)
+  ^ fn():
+    while true:
+      s := f:read()
+      if s == nil: f:close(); ^ nil
+      s = s:gsub("^%s+", ""):gsub("%s+$", "")
+      if #s > 0 and s:sub(1,1) ~= "#":
+        ^ [of(x) for x in s:gmatch("[^,]+")]
+
+-- 7. tests
+chk := fn(...):             -- cases {tag, got, want[, tol]}; print
+  for _, c in ipairs({...}):    -- each; false,failTag on mismatch
+    o2(c[1], c[2])
+    if not (c[4] and abs(c[2] - c[3]) <= c[4] or c[2] == c[3]):
+      ^ false, c[1]
+  ^ true
+
+test := fn(egs):            -- run egs (all, or names in arg);
+  fails := 0                -- seeds reset per eg; returns #fails
+  names := #arg > 0 and arg or sort(keys(egs))
+  for _, k in ipairs(names):
+    if egs[k]:
+      print("-- " .. k)
+      math.randomseed(1)
+      srand(1)
+      ok, err := pcall(egs[k])
+      if not ok or err == false:
+        fails = fails + 1
+        print("FAIL", k, err or "")
+  print(fails == 0 and "all pass" or fails .. " failed")
+  ^ fails
+
+^ {abs=abs, max=max, min=min, sqrt=sqrt, exp=exp, floor=floor,
+   srand=srand, rand=rand, any=any, shuffle=shuffle,
+   push=push, sort=sort, keys=keys, order=order,
+   nth=nth, lt=lt, gt=gt, keysort=keysort, slice=slice,
+   new=new, deepCopy=deepCopy,
+   of=of, o=o, o2=o2, sum=sum, argmin=argmin,
+   path=path, csv=csv, chk=chk, test=test}

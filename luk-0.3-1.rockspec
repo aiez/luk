@@ -1,16 +1,18 @@
 package = "luk"
-version = "0.2-1"
+version = "0.3-1"
 
 source = {
   url = "git+https://github.com/aiez/luk",
 }
 
 description = {
-  summary  = "tiny .luk -> Lua transpiler (~70-line module)",
+  summary  = "tiny .luk -> Lua transpiler (~120-line module)",
   detailed = [[
-    luk is the .luk language: Lua plus `fn`, `^` for return,
-    `:=` locals, `!=`, and Python-style comprehensions. Blocks
-    stay pure Lua (then/do/else/end).
+    luk is the .luk language: Lua plus Python-style indented
+    blocks ("if x:" ... dedent closes it), `fn`, `^` for return,
+    `:=` locals, `!=`, `elif`, and comprehensions. Explicit
+    then/do/else/end still works, so any Lua is (almost)
+    valid luk. Generated Lua keeps the source's line numbers.
 
     The module returns a single function and installs a
     require() hook for .luk modules:

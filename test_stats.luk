@@ -1,0 +1,44 @@
+-- vim: ft=luk ts=2 sw=2 sts=2 et :
+-- test_stats.luk: checks for stats.luk.
+-- usage: ./luk test_stats.luk [NAME...]   (no args = run all)
+L := require("lib")
+S := require("stats")
+chk, test := L.chk, L.test
+
+mk := fn(off):              -- 50 rands, shifted; srand reset per eg
+  u := {}
+  for _ = 1, 50: u[#u+1] = L.rand() + off
+  ^ u
+
+eg := {}
+
+eg["welfords"] = fn():
+  mu, sd := S.welfords({1, 2, 3, 4, 5})
+  ^ chk({"mu", mu, 3}, {"sd", sd, 1.5811, 1e-3})
+
+eg["bisect"] = fn():
+  t := {1, 2, 2, 3, 5, 8}
+  ^ chk({"le", S.bisect(t, 2), 3},
+        {"lt", S.bisect(t, 2, true), 1},
+        {"below", S.bisect(t, 0), 0},
+        {"above", S.bisect(t, 99), 6})
+
+eg["effects"] = fn():
+  ^ chk({"cliffs", S.cliffsDelta({1, 2, 3}, {10, 11, 12}), 1},
+        {"ks", S.ks({1, 2, 3}, {10, 11, 12}), 1},
+        {"pooledSd",
+         S.pooledSd({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}), 1.5811, 1e-3})
+
+eg["sames"] = fn():
+  a, b, c := mk(0), mk(0), mk(5)
+  ^ chk({"same", S.sames(a, b, 0.35 * S.pooledSd(a, b)), true},
+        {"diff", S.sames(a, c, 0.35 * S.pooledSd(a, c)), false})
+
+eg["topTier"] = fn():
+  a, b, c := mk(0), mk(0), mk(5)
+  tier := S.topTier({a = a, b = b, c = c}, nil, 0.35)
+  ^ chk({"has a", tier.a ~= nil, true},
+        {"has b", tier.b ~= nil, true},
+        {"no c", tier.c, nil})
+
+os.exit(test(eg))

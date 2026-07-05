@@ -1,0 +1,74 @@
+-- vim: ft=luk ts=2 sw=2 sts=2 et :
+-- test_lib.luk: checks for lib.luk.
+-- usage: ./luk test_lib.luk [NAME...]     (no args = run all)
+L := require("lib")
+chk, test, o, push := L.chk, L.test, L.o, L.push
+sort, keys := L.sort, L.keys
+
+eg := {}
+
+eg["lists"] = fn():
+  t := L.shuffle({3, 1, 2, 5, 4})
+  ^ chk({"shuffle", #t, 5},
+        {"sort", sort(L.deepCopy(t))[1], 1},
+        {"push", push({1, 2}, 9), 9},
+        {"slice", L.slice({10, 20, 30, 40, 50}, 2, -2)[3], 40},
+        {"keysort", L.keysort({{1}, {0}, {2}}, L.nth(1))[1][1], 0},
+        {"nth", L.nth(2)({4, 5, 6}), 5},
+        {"lt", L.lt(1)({1}, {2}), true},
+        {"argmin", L.argmin({30, 10, 50}, fn(x): ^ x), 10})
+
+eg["copy"] = fn():
+  a := L.new({}, {x = {1, 2}, y = 3})
+  a.self = a                                       -- cycle
+  b := L.deepCopy(a)
+  ^ chk({"fresh", b.x ~= a.x, true},
+        {"vals", b.x[2], 2},
+        {"cycle", b.self == b, true},
+        {"mt", getmetatable(b) == getmetatable(a), true})
+
+eg["rand"] = fn():
+  L.srand(1); a := L.rand()
+  L.srand(1); b := L.rand()
+  n := L.rand(6)
+  ^ chk({"repro", a, b},
+        {"range", n >= 1 and n <= 6, true},
+        {"any", type(L.any({10, 20, 30})), "number"})
+
+eg["order"] = fn():
+  u := {}
+  for k, _ in L.order({z = 1, a = 2, m = 3}): push(u, k)
+  ^ chk({"order", table.concat(u, ","), "a,m,z"},
+        {"keys", table.concat(sort(keys({b = 1, a = 2})), ","), "a,b"})
+
+eg["str"] = fn():
+  ^ chk({"int", L.of("42"), 42},
+        {"bool", L.of("True"), true},
+        {"str", L.of("hi"), "hi"},
+        {"float", o(1.5), "1.50"},
+        {"dict", o({b = 2, a = 1}), "{a=1, b=2}"},
+        {"list", o({1, 2, 3}), "{1, 2, 3}"})
+
+eg["csv"] = fn():
+  tmp := os.tmpname()
+  f := assert(io.open(tmp, "w"))
+  f:write("a,b\n# skip\n\n1,2\n")
+  f:close()
+  rows := [r for r in L.csv(tmp)]
+  os.remove(tmp)
+  ^ chk({"rows", #rows, 2},
+        {"head", rows[1][1], "a"},
+        {"cell", rows[2][2], 2})
+
+eg["obj"] = fn():
+  Dog := {}
+  Dog.new = fn(s): ^ L.new(Dog, {name = s})
+  Dog.speak = fn(i): ^ i.name .. " woofs"
+  d := Dog.new("rex")
+  ^ chk({"speak", d:speak(), "rex woofs"})
+
+eg["misc"] = fn():
+  ^ chk({"sum", L.sum({1, 2, 3}), 6},
+        {"path", L.path("~/x"), (os.getenv("HOME") or "~") .. "/x"})
+
+os.exit(test(eg))

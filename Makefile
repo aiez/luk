@@ -19,6 +19,13 @@ include $(KONFIG)/Makefile
 %.lua: %.luk luk.lua
 	lua -e 'io.write(require("luk")(io.read("*a")))' < $< > $@
 
+# ---- tests ---------------------------------------------------------
+tests: ## transpiler tests, then lib/stats/fft checks
+	lua tests.lua
+	./luk test_lib.luk
+	./luk test_stats.luk
+	./luk test_fft.luk
+
 # ---- luk shell: konfig bashrc + luk.rc (vi w/ .luk mode) ------
 fsh: ## luk tuned bash (konfig bashrc + luk.rc overlay)
 	$(call need,nvim,fsh)

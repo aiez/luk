@@ -3,10 +3,11 @@
 
 ### [https://github.com/aiez/luk](https://github.com/aiez/luk)
 
-`luk` is the **`.luk` language**: Lua plus `fn`, `^` for return,
-`:=` locals, `!=`, and Python-style comprehensions. Blocks stay
-pure Lua (`then/do/else/end`), so any Lua is (almost) valid luk.
-One ~70-line module, `luk.lua`, does whole-source transpilation
+`luk` is the **`.luk` language**: Lua plus Python-style indented
+blocks (`if x:` ... dedent closes it), `fn`, `^` for return,
+`:=` locals, `!=`, `elif`, and comprehensions. Explicit
+`then/do/else/end` still works, so any Lua is (almost) valid luk.
+One ~120-line module, `luk.lua`, does whole-source transpilation
 and installs a `require()` hook for `.luk` modules.
 
 ```bash
@@ -20,7 +21,7 @@ For the optimizer shipped with luk (`fft.luk`) see [fft.md](fft.md).
 
 **Sections:** [NAME](#name) | [SYNOPSIS](#synopsis) | [LANGUAGE REFERENCE](#language-reference) | [PERFORMANCE](#performance) | [FILES](#files) | [VIM SUPPORT](#vim-support) | [SEE ALSO](#see-also) | [LICENSE](#license) | [AUTHOR](#author)
 
-**Files:** [luk.lua](https://github.com/aiez/luk#file-luk-lua) | [fft.luk](https://github.com/aiez/luk#file-fft-luk) | [lib.luk](https://github.com/aiez/luk#file-lib-luk) | [fft.lua](https://github.com/aiez/luk#file-fft-lua) | [lib.lua](https://github.com/aiez/luk#file-lib-lua) | [fft.md](https://github.com/aiez/luk#file-fft-md) | [luk.rc](https://github.com/aiez/luk#file-luk-rc) | [luk.vim](https://github.com/aiez/luk#file-luk-vim)
+**Files:** [luk.lua](https://github.com/aiez/luk#file-luk-lua) | [fft.luk](https://github.com/aiez/luk#file-fft-luk) | [lib.luk](https://github.com/aiez/luk#file-lib-luk) | [stats.luk](https://github.com/aiez/luk#file-stats-luk) | [tests.lua](https://github.com/aiez/luk#file-tests-lua) | [fft.md](https://github.com/aiez/luk#file-fft-md) | [luk.rc](https://github.com/aiez/luk#file-luk-rc) | [luk.vim](https://github.com/aiez/luk#file-luk-vim)
 
 ## NAME
 
@@ -41,14 +42,59 @@ the `.luk` version.
 
 ## LANGUAGE REFERENCE
 
-Blocks are pure Lua: `if c then ... else ... end`,
-`for ... do ... end`, `while ... do ... end`. Everything below is
-whole-source token rewriting; strings and comments are hidden
-first, so sigils inside them are safe.
+Everything below is whole-source rewriting; strings and comments
+are hidden first, so sigils inside them are safe. Generated Lua
+keeps the source's line numbers exactly (auto-`end`s are appended
+to a block's last code line), so error messages point at real
+`.luk` lines.
+
+### Blocks
+
+A line ending in `:` opens a block; the indented body below it is
+closed at the dedent (`end` is added for you):
+
+    fn sign(x):                       function sign(x)
+      if x > 0:                         if x > 0 then
+        ^ 1                               return 1
+      elif x < 0:                       elseif x < 0 then
+        ^ -1                              return -1
+      else:                             else
+        ^ 0                               return 0 end end
+    print(sign(3))                    print(sign(3))
+
+Headers: `if c:` `elif c:` `else:` `while c:` `for ... :` `do:`
+`fn NAME(...):` and `NAME := fn(...):`. Explicit Lua blocks
+(`then/do/else/end`) still work and may be mixed freely.
+
+### One-liners
+
+`HEADER: BODY` on one line auto-closes (note the space after `:`):
+
+    if x < lo: ^ lo                   if x < lo then return lo
+    elif x > hi: ^ hi                 elseif x > hi then return hi end
+    while i < 5: i = i + 1            while i < 5 do i = i + 1 end
+    for i = 1, 4: s = s + i           for i = 1, 4 do s = s + i end
+    fn double(x): ^ x * 2             function double(x) return x*2 end
+
+A one-liner `if` followed by `elif`/`else` lines continues the
+chain; the chain closes at the next non-`else` line.
+
+### Functions
+
+Three anonymous-fn shapes:
+
+    f := fn(a): ^ a + 1               -- one-liner (auto end)
+    sort(t, fn(a,b): ^ a.k < b.k)     -- mid-expression one-liner:
+                                      --   "end" lands before the
+                                      --   unbalanced ")]}" or comma
+    g := fn(a):                       -- fn last on the line:
+      b := a * 2                      --   full indented body,
+      ^ b                             --   n lines, no "end"
 
 ### Keywords
 
     fn                 -> function
+    elif               -> elseif
     !=                 -> ~=     (Lua's not-equal)
 
 ### Return
@@ -59,8 +105,8 @@ first, so sigils inside them are safe.
 after `;`, `then`, `do`, `else`, or a `fn(...)` parameter list.
 Infix exponentiation `a^b` is untouched.
 
-    double := fn(z) ^ z * 2 end
-    pick   := fn(b) if b then ^ "yes" else ^ "no" end end
+    double := fn(z): ^ z * 2
+    pick   := fn(b): if b then ^ "yes" else ^ "no" end
 
 ### Local declarations
 
@@ -83,8 +129,34 @@ Infix exponentiation `a^b` is untouched.
   Limit: a dict comprehension's key expression must not contain
   a bare comma.
 
-### Misc
+### Gotchas
 
+  - A one-liner's colon needs a space after it: `if x: y`. Method
+    calls have no space (`obj:m()`), which is how the two are
+    told apart. Never put a space after a method colon.
+  - No `repeat:` — write plain Lua `repeat ... until c` (it works
+    fine inside colon blocks; `until` needs no special care).
+  - `elif` and `fn` are keywords everywhere: don't use them as
+    variable names.
+  - Statement one-liners don't nest: `if x: if y: z` breaks.
+    (One-liner *anonymous fns* do nest and chain fine:
+    `{fn(x): ^ x + 1, fn(y): ^ y * 2}`.)
+  - Don't indent the line after a one-liner deeper than it.
+  - Indent with spaces, consistently; tabs count as one column.
+  - A multi-line anonymous fn mid-expression (e.g. as a call's
+    first of several arguments) can't use `:` — write explicit
+    `fn(x) ... end`, or make the fn the last thing on its line.
+  - Lines inside unclosed `(`/`{`/`[` (multi-line tables, calls,
+    comprehensions) are never treated as headers or dedents, so
+    hanging indents are safe there.
+  - goto labels `::x::` pass through untouched, but don't put one
+    on the same line as a one-liner.
+  - Don't edit `.luk` files under `ft=lua`: Lua *treesitter*
+    can't parse colon one-liners, and its error recovery re-pairs
+    the quotes around any string on that line -- the rest of the
+    file then renders as one giant string (all green). Use
+    `ft=luk` + `luk.vim` (regex-based, no such failure); the
+    files' modelines already say `ft=luk`.
   - No compound assignment: write `x = x + 1`, not `x += 1`.
   - No shebang line in `.luk` files (load() rejects `#`).
   - Long strings/comments `[[...]]` pass through untouched.
@@ -104,8 +176,16 @@ gsub, ~1ms for a 250-line file: negligible on any real workload.
 ## FILES
 
     luk.lua      .luk -> .lua transpiler + require() hook
+    tests.lua    transpiler regression tests (lua tests.lua)
+    test_*.luk   lib/stats/fft checks (make tests, or
+                 ./luk test_lib.luk [NAME...])
     luk          runner: transpile + run (./luk FILE.luk)
-    lib.luk      "battery" helpers (argmin, sum, csv, of, ...)
+    lib.luk      "battery": portable PRNG (srand/rand/any/shuffle),
+                 o pretty-print, push, keys/order, nth/lt/gt,
+                 keysort, slice, new, deepCopy, path, csv iterator,
+                 sum, argmin, of, ...
+    stats.luk    non-parametric stats: cliffsDelta, ks, sames,
+                 pooledSd, topTier (requires "lib")
     fft.luk      example: multi-objective regression tree
     Makefile     rule:  %.lua: %.luk luk.lua
     sandbox/     retired v0.1 indentation-based dialect (luk2)
@@ -117,7 +197,7 @@ gsub, ~1ms for a 250-line file: negligible on any real workload.
 
 ## SEE ALSO
 
-    fft.md                   help page for the fft.lua app
+    fft.md                   help page for the fft.luk app
     https://github.com/aiez/fft       Python sibling project
     https://github.com/aiez/optimiz   example CSVs
     https://github.com/aiez/konfig    shared Makefile
