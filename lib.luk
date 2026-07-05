@@ -98,11 +98,18 @@ sum := fn(xs):
   for _, x in ipairs(xs): s = s + x
   ^ s
 
-argmin := fn(xs, key):
-  best, bv := xs[1], key(xs[1])
-  for i = 2, #xs:
-    v := key(xs[i])
-    if v < bv: best, bv = xs[i], v
+iter := fn(t):              -- iterate a list's values, or pass
+  if type(t) == "function": ^ t      -- a generator fn through
+  j := 0
+  ^ fn():
+    j = j + 1
+    ^ t[j]
+
+argmin := fn(xs, key):      -- min-by-key item; xs list or iterator
+  best, bv := nil, nil
+  for x in iter(xs):
+    v := key(x)
+    if bv == nil or v < bv: best, bv = x, v
   ^ best
 
 -- 6. files
@@ -149,5 +156,5 @@ test := fn(egs):            -- run egs (all, or names in arg);
    push=push, sort=sort, keys=keys, order=order,
    nth=nth, lt=lt, gt=gt, keysort=keysort, slice=slice,
    new=new, deepCopy=deepCopy,
-   of=of, o=o, o2=o2, sum=sum, argmin=argmin,
+   of=of, o=o, o2=o2, sum=sum, iter=iter, argmin=argmin,
    path=path, csv=csv, chk=chk, test=test}

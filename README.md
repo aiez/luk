@@ -170,8 +170,10 @@ Runtime, default mode (depth=4, 16 trees built):
     auto93     398     0.080s   0.038s   0.035s
     SS-N      53663    9.18s    5.86s    6.15s
 
-Lua 1.5x-2.5x faster than Python. Transpile is whole-source
-gsub, ~1ms for a 250-line file: negligible on any real workload.
+Lua 1.5x-2.5x faster than Python. Transpile is one line pass +
+whole-source gsubs: ~2ms for a 250-line file, ~80ms for 10,000
+lines (~95% of a .luk require; plain .lua parses in ~4ms).
+Negligible on any real workload.
 
 ## FILES
 

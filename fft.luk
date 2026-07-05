@@ -93,23 +93,23 @@ adds = fn(src, it):
   ^ it
 
 -- 3. Discretization ----------------------------------------
-cutsSyms := fn(bins, tot, hi, at):
-  u := {}
-  for k, l in pairs(bins):
-    score := l.m2 + merge(tot, l, -1).m2
-    u[#u+1] = {score=score, at=at, lo=hi[k], hi=hi[k], leaf=l}
-  ^ u
+cutsSyms := fn(bins, tot, hi, at):    -- iterator of candidate cuts
+  k, l := nil, nil
+  ^ fn():
+    k, l = next(bins, k)
+    if k ~= nil:
+      ^ {score=l.m2 + merge(tot, l, -1).m2,
+         at=at, lo=hi[k], hi=hi[k], leaf=l}
 
-cutsNums := fn(bins, tot, hi, at):
-  u := {}
+cutsNums := fn(bins, tot, hi, at):    -- iterator of candidate cuts
   ks := sort([k for k, _ in pairs(bins)])
-  l := Num()
-  for j = 1, #ks - 1:
-    k := ks[j]
-    l = merge(l, bins[k])
-    score := l.m2 + merge(tot, l, -1).m2
-    u[#u+1] = {score=score, at=at, lo=-BIG, hi=hi[k], leaf=l}
-  ^ u
+  l, j := Num(), 0
+  ^ fn():
+    j = j + 1
+    if j < #ks:
+      l = merge(l, bins[ks[j]])
+      ^ {score=l.m2 + merge(tot, l, -1).m2,
+         at=at, lo=-BIG, hi=hi[ks[j]], leaf=l}
 
 cuts := fn(data, rows, y):
   u, ys := {}, [y(r) for _, r in ipairs(rows)]
@@ -123,9 +123,9 @@ cuts := fn(data, rows, y):
         bins[k] = add(bins[k] or Num(), ys[i])
         tot     = add(tot, ys[i])
         hi[k] = c.symp and v or max(hi[k] or -BIG, v)
-    inner := (c.symp and cutsSyms or cutsNums)(
-               bins, tot, hi, at)
-    for _, x in ipairs(inner): u[#u+1] = x
+    cut := argmin((c.symp and cutsSyms or cutsNums)(
+                    bins, tot, hi, at), fn(z): ^ z.score)
+    if cut: u[#u+1] = cut
   ^ u
 
 -- 4. Build a tree ------------------------------------------
