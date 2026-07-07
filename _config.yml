@@ -1,0 +1,31 @@
+# GitHub Pages via .github/workflows/pages.yml (Jekyll 4 + just-the-docs).
+# README.md is the homepage; sub-notes live in docs/ (if any).
+title: luk
+description: "Tiny transpiler for Lua"
+theme: just-the-docs
+plugins:
+  - jekyll-optional-front-matter
+  - jekyll-readme-index
+  - jekyll-relative-links
+  - jekyll-default-layout
+  - jekyll-titles-from-headings
+
+aux_links:
+  GitHub: https://github.com/aiez/luk
+
+# front matter injected here so md files stay clean on github.com;
+# render_with_liquid off for our pages only (code `{{...}}` literals
+# break Liquid) -- theme scss assets need Liquid, so no blanket scope
+defaults:
+  - scope: {path: "README.md"}
+    values: {layout: default, title: Home, nav_order: 1, permalink: /, render_with_liquid: false}
+  - scope: {path: "docs"}
+    values: {layout: default, render_with_liquid: false}
+
+exclude:
+  - Makefile
+  - Gemfile
+  - Gemfile.lock
+  - banner.txt
+  - todo.md
+  - vendor
