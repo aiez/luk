@@ -1,7 +1,7 @@
 -- luk2.lua : RETIRED indentation-based ".luk" -> Lua transpiler.
 -- (was luk.lua v0.1; replaced by the end-syntax luk.lua upstairs)
 -- Returns transpile fn.
--- fun=function  !=return  NAME:=V  ->  local NAME=V
+-- fun=function  ^=return  let NAME=V  ->  local NAME=V
 -- if (c): elseif (c): else: for X in Y: while c: fun(a):
 -- Body after ":" = one-liner (auto end). Indent block ends on outdent.
 -- [e for v in xs] / [e for v in xs if c] = comprehension.
@@ -22,7 +22,7 @@ local function oneLiner(r)
   local t = r:gsub("^%s+","")
   return t:match"^if%s*%(" or t:match"^elseif%s*%("
       or t:match"^else%s*:" or t:match"^for%s"
-      or t:match"^while%s"  or t:match":=%s*fun%s*%("
+      or t:match"^while%s"  or t:match"^let%s.-=%s*fun%s*%("
       or t:match"^[%w_.%[%]\"'%-]+%s*=%s*fun%s*%(" end
 
 local function opensBlock(s)
@@ -46,7 +46,7 @@ local function line(b)
     {'"[^"]*"',    hide},
     {"'[^']*'",    hide},
     {"(%s*%-%-.*)$", function(x) c=x; return "" end},
-    {"^(%s*)([%w_][%w_,%s]*)%s*:=",   "%1local %2 ="},
+    {"^(%s*)let%f[%W]%s+([%w_][%w_,%s]-)%s*=", "%1local %2 ="},
     {"^(%s*)([%w_.]+)%s*([%+%-%*/])=%s+",
                                       "%1%2 = %2 %3 "},
     {"%f[%w_]fun%f[%W]",              "function"},
@@ -63,7 +63,12 @@ local function line(b)
     {"(%f[%w_]else)%s*:%s*$",         "%1"},
     {"(%f[%w_]else)%s*:(%s)",         "%1%2"},
     {"!=",                            "~="},
-    {"!%s*",                          "return "},
+    {"^(%s*)%^%s*",                   "%1return "},
+    {"(;%s*)%^%s*",                   "%1return "},
+    {"(%f[%w_]then%f[%W]%s*)%^%s*",   "%1return "},
+    {"(%f[%w_]do%f[%W]%s*)%^%s*",     "%1return "},
+    {"(%f[%w_]else%f[%W]%s*)%^%s*",   "%1return "},
+    {"(function%s*%b()%s*)%^%s*",     "%1return "},
     {"%b[]", function(m)
        local n = m:sub(2,-2)
        local e,v,i,k = n:match"^(.-) for (.-) in (.-) if (.+)$"
