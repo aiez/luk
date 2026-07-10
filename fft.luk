@@ -1,4 +1,4 @@
--- vim: ft=luk ts=2 sw=2 sts=2 et :
+-- vim: filetype=lua ts=2 sw=2 sts=2 et :
 -- fft.luk: fast-frugal multi-objective tree. Colon syntax.
 -- (c) 2026, Tim Menzies <timm@ieee.org>, MIT license
 --
