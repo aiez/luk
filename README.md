@@ -5,7 +5,7 @@
 
 `luk` is the **`.luk` language**: Lua plus Python-style indented
 blocks (`if x:` ... dedent closes it), `fn`, `^` for return,
-`:=` locals, `!=`, `elif`, and comprehensions. Explicit
+`let` locals, `!=`, `elif`, and comprehensions. Explicit
 `then/do/else/end` still works, so any Lua is (almost) valid luk.
 One ~120-line module, `luk.lua`, does whole-source transpilation
 and installs a `require()` hook for `.luk` modules.
@@ -55,26 +55,26 @@ closed at the dedent (`end` is added for you):
 
     fn sign(x):                       function sign(x)
       if x > 0:                         if x > 0 then
-        ^ 1                               return 1
+        ^1                                return 1
       elif x < 0:                       elseif x < 0 then
-        ^ -1                              return -1
+        ^-1                               return -1
       else:                             else
-        ^ 0                               return 0 end end
+        ^0                                return 0 end end
     print(sign(3))                    print(sign(3))
 
 Headers: `if c:` `elif c:` `else:` `while c:` `for ... :` `do:`
-`fn NAME(...):` and `NAME := fn(...):`. Explicit Lua blocks
+`fn NAME(...):` and `let NAME = fn(...):`. Explicit Lua blocks
 (`then/do/else/end`) still work and may be mixed freely.
 
 ### One-liners
 
 `HEADER: BODY` on one line auto-closes (note the space after `:`):
 
-    if x < lo: ^ lo                   if x < lo then return lo
-    elif x > hi: ^ hi                 elseif x > hi then return hi end
+    if x < lo: ^lo                    if x < lo then return lo
+    elif x > hi: ^hi                  elseif x > hi then return hi end
     while i < 5: i = i + 1            while i < 5 do i = i + 1 end
     for i = 1, 4: s = s + i           for i = 1, 4 do s = s + i end
-    fn double(x): ^ x * 2             function double(x) return x*2 end
+    fn double(x): ^x * 2              function double(x) return x*2 end
 
 A one-liner `if` followed by `elif`/`else` lines continues the
 chain; the chain closes at the next non-`else` line.
@@ -83,13 +83,13 @@ chain; the chain closes at the next non-`else` line.
 
 Three anonymous-fn shapes:
 
-    f := fn(a): ^ a + 1               -- one-liner (auto end)
-    sort(t, fn(a,b): ^ a.k < b.k)     -- mid-expression one-liner:
+    let f = fn(a): ^a + 1             -- one-liner (auto end)
+    sort(t, fn(a,b): ^a.k < b.k)      -- mid-expression one-liner:
                                       --   "end" lands before the
                                       --   unbalanced ")]}" or comma
-    g := fn(a):                       -- fn last on the line:
-      b := a * 2                      --   full indented body,
-      ^ b                             --   n lines, no "end"
+    let g = fn(a):                    -- fn last on the line:
+      let b = a * 2                   --   full indented body,
+      ^b                              --   n lines, no "end"
 
 ### Keywords
 
@@ -99,19 +99,19 @@ Three anonymous-fn shapes:
 
 ### Return
 
-    ^ EXPR             -> return EXPR
+    ^EXPR              -> return EXPR
 
 `^` means return only at a statement start: start of line, or
 after `;`, `then`, `do`, `else`, or a `fn(...)` parameter list.
-Infix exponentiation `a^b` is untouched.
+Infix exponentiation `a ^ b` is untouched.
 
-    double := fn(z): ^ z * 2
-    pick   := fn(b): if b then ^ "yes" else ^ "no" end
+    let double = fn(z): ^z * 2
+    let pick   = fn(b): if b then ^"yes" else ^"no" end
 
 ### Local declarations
 
-    NAME := EXPR       -> local NAME = EXPR
-    A, B := X, Y       -> local A, B = X, Y
+    let NAME = EXPR    -> local NAME = EXPR
+    let A, B = X, Y    -> local A, B = X, Y
 
 ### Comprehensions (may span lines; no nesting)
 
@@ -136,11 +136,11 @@ Infix exponentiation `a^b` is untouched.
     told apart. Never put a space after a method colon.
   - No `repeat:` — write plain Lua `repeat ... until c` (it works
     fine inside colon blocks; `until` needs no special care).
-  - `elif` and `fn` are keywords everywhere: don't use them as
-    variable names.
+  - `elif`, `fn` and `let` are keywords everywhere: don't use
+    them as variable names (or table keys like `{let = 1}`).
   - Statement one-liners don't nest: `if x: if y: z` breaks.
     (One-liner *anonymous fns* do nest and chain fine:
-    `{fn(x): ^ x + 1, fn(y): ^ y * 2}`.)
+    `{fn(x): ^x + 1, fn(y): ^y * 2}`.)
   - Don't indent the line after a one-liner deeper than it.
   - Indent with spaces, consistently; tabs count as one column.
   - A multi-line anonymous fn mid-expression (e.g. as a call's

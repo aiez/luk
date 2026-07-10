@@ -10,7 +10,7 @@ description = {
   detailed = [[
     luk is the .luk language: Lua plus Python-style indented
     blocks ("if x:" ... dedent closes it), `fn`, `^` for return,
-    `:=` locals, `!=`, `elif`, and comprehensions. Explicit
+    `let` locals, `!=`, `elif`, and comprehensions. Explicit
     then/do/else/end still works, so any Lua is (almost)
     valid luk. Generated Lua keeps the source's line numbers.
 

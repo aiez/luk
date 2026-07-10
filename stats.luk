@@ -1,71 +1,71 @@
 -- vim: ft=luk ts=2 sw=2 sts=2 et :
 -- stats.luk: non-parametric stats for comparing treatments.
 -- (c) 2026, Tim Menzies <timm@ieee.org>, MIT license
--- usage:  S := require("stats")
+-- usage:  let S = require("stats")
 --         if S.sames(xs, ys) then ...
 
-L := require("lib")
-sort, keys, keysort := L.sort, L.keys, L.keysort
-abs, max := math.abs, math.max
+let L = require("lib")
+let sort, keys, keysort = L.sort, L.keys, L.keysort
+let abs, max = math.abs, math.max
 
-welfords := fn(xs):         -- batch mu, sd of a list (Welford)
-  n, mu, m2 := 0, 0, 0
+let welfords = fn(xs):         -- batch mu, sd of a list (Welford)
+  let n, mu, m2 = 0, 0, 0
   for _, v in ipairs(xs):
     n = n + 1
-    d := v - mu
+    let d = v - mu
     mu = mu + d / n
     m2 = m2 + d * (v - mu)
-  ^ mu, (n < 2 and 0 or (m2 / (n - 1)) ^ 0.5)
+  ^mu, (n < 2 and 0 or (m2 / (n - 1)) ^ 0.5)
 
-bisect := fn(t, x, strict): -- count t[i]<=x (<x if strict); t sorted
-  lo, hi := 1, #t
+let bisect = fn(t, x, strict): -- count t[i]<=x (<x if strict); t sorted
+  let lo, hi = 1, #t
   while lo <= hi:
-    mid := (lo + hi) // 2
+    let mid = (lo + hi) // 2
     if strict and t[mid] < x or (not strict) and t[mid] <= x:
       lo = mid + 1
     else:
       hi = mid - 1
-  ^ lo - 1
+  ^lo - 1
 
-pooledSd := fn(xs, ys):     -- pooled stdev of two raw samples
-  nx, sx := #xs, (select(2, welfords(xs)))
-  ny, sy := #ys, (select(2, welfords(ys)))
-  ^ (((nx-1)*sx*sx + (ny-1)*sy*sy) / (nx+ny-2)) ^ 0.5
+let pooledSd = fn(xs, ys):     -- pooled stdev of two raw samples
+  let nx, sx = #xs, (select(2, welfords(xs)))
+  let ny, sy = #ys, (select(2, welfords(ys)))
+  ^(((nx-1)*sx*sx + (ny-1)*sy*sy) / (nx+ny-2)) ^ 0.5
 
-cliffsDelta := fn(xs, ys):  -- effect size; ys pre-sorted
-  n, p, ngt, nlt := #xs, #ys, 0, 0
+let cliffsDelta = fn(xs, ys):  -- effect size; ys pre-sorted
+  let n, p, ngt, nlt = #xs, #ys, 0, 0
   for _, v in ipairs(xs):
     ngt = ngt + bisect(ys, v, true)
     nlt = nlt + (p - bisect(ys, v))
-  ^ abs(ngt - nlt) / (n * p)
+  ^abs(ngt - nlt) / (n * p)
 
-ks := fn(xs, ys):           -- Kolmogorov-Smirnov gap; pre-sorted
-  n, p, d := #xs, #ys, 0
-  gap := fn(v): ^ abs(bisect(xs, v)/n - bisect(ys, v)/p)
+let ks = fn(xs, ys):           -- Kolmogorov-Smirnov gap; pre-sorted
+  let n, p, d = #xs, #ys, 0
+  let gap = fn(v): ^abs(bisect(xs, v)/n - bisect(ys, v)/p)
   for _, v in ipairs(xs): d = max(d, gap(v))
   for _, v in ipairs(ys): d = max(d, gap(v))
-  ^ d
+  ^d
 
-sames := fn(xs, ys, eps, cliffs, ksconf):
-  eps, cliffs, ksconf := eps or 0, cliffs or 0.195, ksconf or 1.36
-  a := sort({table.unpack(xs)})
-  b := sort({table.unpack(ys)})
-  n, p := #a, #b
-  if abs(a[n//2+1] - b[p//2+1]) <= eps: ^ true
-  if cliffsDelta(a, b) > cliffs: ^ false
-  ^ ks(a, b) <= ksconf * ((n + p) / (n * p)) ^ 0.5
+let sames = fn(xs, ys, eps, cliffs, ksconf):
+  let eps, cliffs, ksconf = eps or 0, cliffs or 0.195, ksconf or 1.36
+  let a = sort({table.unpack(xs)})
+  let b = sort({table.unpack(ys)})
+  let n, p = #a, #b
+  if abs(a[n//2+1] - b[p//2+1]) <= eps: ^true
+  if cliffsDelta(a, b) > cliffs: ^false
+  ^ks(a, b) <= ksconf * ((n + p) / (n * p)) ^ 0.5
 
-topTier := fn(dict, cmp, eps, cliffs, ksconf):
-  out := {}
-  names := keysort(keys(dict), fn(k): ^ (welfords(dict[k])), cmp)
-  best := dict[names[1]]
+let topTier = fn(dict, cmp, eps, cliffs, ksconf):
+  let out = {}
+  let names = keysort(keys(dict), fn(k): ^(welfords(dict[k])), cmp)
+  let best = dict[names[1]]
   out[names[1]] = (welfords(best))
   for i = 2, #names:
-    cand := dict[names[i]]
-    th := (eps or 0) * pooledSd(best, cand)
+    let cand = dict[names[i]]
+    let th = (eps or 0) * pooledSd(best, cand)
     if not sames(best, cand, th, cliffs, ksconf): break
     out[names[i]] = (welfords(cand))
-  ^ out
+  ^out
 
-^ {welfords=welfords, bisect=bisect, pooledSd=pooledSd,
+^{welfords=welfords, bisect=bisect, pooledSd=pooledSd,
    cliffsDelta=cliffsDelta, ks=ks, sames=sames, topTier=topTier}

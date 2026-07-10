@@ -44,7 +44,7 @@ end keywords
 
 #keywords in Keyword_strong are
 keywords in Keyword_strong are
-    assert, break, collectgarbage, do, dofile, else, elseif, "end", 
+    assert, break, collectgarbage, do, dofile, elif, else, elseif, "end", fn, let,
     error, for, function, getmetatable, goto, if, "in", local, 
     load, loadfile, next, pcall, print, repeat, require, return, 
     setmetatable, then, until, while, xpcall, _G, _VERSION

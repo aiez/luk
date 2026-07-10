@@ -1,33 +1,33 @@
 -- vim: ft=luk ts=2 sw=2 sts=2 et :
 -- test_fft.luk: checks for fft.luk.
 -- usage: ./luk test_fft.luk [NAME...]     (no args = run all)
-F := require("fft")
-L := require("lib")
-chk, test, push := L.chk, L.test, L.push
+let F = require("fft")
+let L = require("lib")
+let chk, test, push = L.chk, L.test, L.push
 
-eg := {}
+let eg = {}
 
 eg["welford"] = fn():
-  num := F.adds({1, 2, 3, 4, 5})
-  ^ chk({"n", num.n, 5},
+  let num = F.adds({1, 2, 3, 4, 5})
+  ^chk({"n", num.n, 5},
         {"mu", num.mu, 3},
         {"sd", F.sd(num), 1.5811, 1e-3})
 
 eg["merge"] = fn():
-  c := F.merge(F.adds({1, 2, 3}), F.adds({4, 5, 6}))
-  ^ chk({"n", c.n, 6}, {"mu", c.mu, 3.5})
+  let c = F.merge(F.adds({1, 2, 3}), F.adds({4, 5, 6}))
+  ^chk({"n", c.n, 6}, {"mu", c.mu, 3.5})
 
 eg["norm"] = fn():
-  num := F.adds({1, 2, 3, 4, 5})
-  ^ chk({"mid", F.norm(num, 3), 0.5, 0.01},
+  let num = F.adds({1, 2, 3, 4, 5})
+  ^chk({"mid", F.norm(num, 3), 0.5, 0.01},
         {"lo", F.norm(num, -99) < 0.01, true},
         {"hi", F.norm(num, 99) > 0.99, true})
 
 eg["data"] = fn():
-  d := F.Data({{"name", "Age-", "Weight+", "job!"},
+  let d = F.Data({{"name", "Age-", "Weight+", "job!"},
                {"tim", 10, 20, "prof"},
                {"ann", 20, 40, "doc"}})
-  ^ chk({"xcols", #d.x, 1},
+  ^chk({"xcols", #d.x, 1},
         {"ycols", #d.y, 3},
         {"rows", #d.rows, 2},
         {"klass", d.klass, 4},
@@ -35,19 +35,19 @@ eg["data"] = fn():
         {"goal-", d.goal[2], 0})
 
 eg["disty"] = fn():
-  src := {{"x", "Y-"}}
+  let src = {{"x", "Y-"}}
   for i = 1, 5: push(src, {"a", i})
-  d := F.Data(src)
-  ^ chk({"lo<hi", F.disty(d, {"a", 1}) < F.disty(d, {"a", 5}), true})
+  let d = F.Data(src)
+  ^chk({"lo<hi", F.disty(d, {"a", 1}) < F.disty(d, {"a", 5}), true})
 
 eg["tree"] = fn():
-  src := {{"x", "Y-"}}
+  let src = {{"x", "Y-"}}
   for i = 1, 20: push(src, {i <= 10 and "a" or "b", i <= 10 and 1 or 10})
-  d := F.Data(src)
-  y := fn(r): ^ F.disty(d, r)
-  trees := F.grows(d, y, d)
-  best := F.tune([b.tree for _, b in ipairs(trees)], d.rows, y)
-  ^ chk({"trees", #trees >= 1, true},
+  let d = F.Data(src)
+  let y = fn(r): ^F.disty(d, r)
+  let trees = F.grows(d, y, d)
+  let best = F.tune([b.tree for _, b in ipairs(trees)], d.rows, y)
+  ^chk({"trees", #trees >= 1, true},
         {"pred", type(F.predict(best, {"a", 1})), "number"})
 
 os.exit(test(eg))

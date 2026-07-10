@@ -7,13 +7,14 @@ unlet! b:current_syntax
 
 syntax clear luaError
 
-" keywords: fn = function, elif = elseif
+" keywords: fn = function, elif = elseif, let = local
 syntax match   lukKeyword     /\<fn\>/
+syntax keyword lukDeclare     let
 syntax keyword lukConditional elif
 
 " block-header ":" at end of line ("if x:", "fn f():", ...) and
 " one-liner ": " colon-space ("if x: ^y"). Method colons (no space
-" after) and "::labels::" don't match; := is lukDeclare below.
+" after) and "::labels::" don't match.
 syntax match lukColon /[^:]\zs:\ze\s*$/
 syntax match lukColon /[^:]\zs:\ze\s\+/
 
@@ -24,7 +25,6 @@ syntax match lukReturn /\%(;\|\<then\>\|\<do\>\|\<else\>\)\s*\zs\^/
 syntax match lukReturn /:\s\+\zs\^/
 syntax match lukReturn /\<fn\>\s*([^)]*)\s*\zs\^/
 
-syntax match lukDeclare  /:=/
 syntax match lukNotEq    /!=/
 
 highlight default link lukKeyword     Keyword
