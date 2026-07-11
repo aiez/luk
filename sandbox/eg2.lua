@@ -6,7 +6,7 @@ local ok = function(test, msg)
   else print("FAIL" .. n .. " " .. msg) os.exit(1) end
 end
 
--- := local
+-- let = local
 local x, y = 10, 20
 ok(x == 10 and y == 20, ":= multi")
 
