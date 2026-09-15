@@ -27,5 +27,4 @@ exclude:
   - Gemfile
   - Gemfile.lock
   - etc/banner.txt
-  - todo.md
   - vendor
