@@ -10,7 +10,7 @@ let abs, max, min = math.abs, math.max, math.min
 let sqrt, exp, floor = math.sqrt, math.exp, math.floor
 
 -- forward decls (recursive fns)
-local o, deepCopy
+let o, deepCopy
 
 -- 1. rand: portable Park-Miller PRNG; seeded runs match anywhere
 let Seed = 1

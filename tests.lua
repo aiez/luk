@@ -43,6 +43,12 @@ CHECK("named-fn", [=[
 fn double(x) ^x * 2 end
 ^double(21)]=], 42)
 
+CHECK("let-forward-decl", [=[
+let f
+f = fn(n) if n < 2 then ^1 end
+  ^n * f(n - 1) end
+^f(4)]=], 24)
+
 CHECK("let-multi", [=[
 let a, b = 2, 3
 ^a * b]=], 6)

@@ -61,6 +61,7 @@ numbers exactly and error messages point at real `.luk` lines.
     !=                 -> ~=     (Lua's not-equal)
     let NAME = EXPR    -> local NAME = EXPR
     let A, B = X, Y    -> local A, B = X, Y
+    let A, B           -> local A, B   (forward declaration)
 
 ### Return
 

@@ -40,7 +40,7 @@ local R = {
   {"(%f[%w_]do%f[%W][ \t]*)%^[ \t]*",         "%1return "},
   {"(%f[%w_]else%f[%W][ \t]*)%^[ \t]*",       "%1return "},
   {"(function[%w_.: \t]*%b()[ \t]*)%^[ \t]*", "%1return "},
-  {"%f[%w_]let[ \t]+([%w_][%w_, \t]-)([ \t]*=)", "local %1%2"},
+  {"%f[%w_]let%f[%W]",       "local"},
   {"%b{}", function(m)
      local e,v,i,c = body(m:sub(2,-2))
      local k,ve; if e then k,ve = e:match"^(.-),(.+)$" end

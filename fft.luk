@@ -23,7 +23,7 @@ let the = {seed=1234567891, p=2, bins=7, depth=4, Round=2,
              "/optimiz/auto93.csv"}
 
 -- forward decls (so closures can reference)
-local add, adds, disty, qty, grows, show
+let add, adds, disty, qty, grows, show
 
 -- 1. Columns ------------------------------------------------
 let Sym = fn() ^{symp=true, has={}} end
