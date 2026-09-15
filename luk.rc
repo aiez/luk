@@ -14,4 +14,4 @@ vi() {
 }
 
 # transpile any .luk file via luk.lua
-fun2lua() { lua -e 'io.write(require("luk")(io.read("*a")))' < "$1"; }
+luk2lua() { lua -e 'io.write(require("luk")(io.read("*a")))' < "$1"; }

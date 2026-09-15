@@ -28,8 +28,9 @@ For the optimizer shipped with luk (`fft.luk`) see [fft.md](fft.md).
 
     luk - .luk-to-Lua transpiler (single-file, no deps)
 
-Runs on Lua 5.3+ and LuaJIT. (Plain 5.1 lacks `package.searchpath`
-and string-accepting `load`, which the `luk` runner needs.)
+Runs on Lua 5.1+, LuaJIT included. (The `luk` runner polyfills
+`package.searchpath` and string-accepting `load`, which 5.1
+lacks. `goto` labels pass through untouched but need 5.2+.)
 
 ## SYNOPSIS
 

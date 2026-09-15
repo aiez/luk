@@ -36,7 +36,7 @@ description = {
   maintainer = "Tim Menzies <timm@ieee.org>",
 }
 
-dependencies = { "lua >= 5.3" }
+dependencies = { "lua >= 5.1" }
 
 build = {
   type    = "builtin",

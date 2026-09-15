@@ -15,7 +15,7 @@ for other repos.
 
 - [x] tiny.cc/fun -> https://github.com/aiez/luk URLs
 - [x] "fun -" title -> "luk -"
-- [ ] verify SYNOPSIS code blocks all use `luk` (not `funny`)
+- [x] verify SYNOPSIS code blocks all use `luk` (not `funny`)
 
 ## a2ps rule cleanup
 

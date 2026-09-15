@@ -3,6 +3,7 @@
 -- source line count (real error lines), (b) running it yields `want`.
 package.path = "./?.lua;" .. package.path
 local transpile = require"luk"
+local load = loadstring or load          -- 5.1/luajit take a string
 
 local n, fails = 0, 0
 
@@ -208,12 +209,13 @@ let s = "a: b"
 CHECK("method-colon-untouched", [=[
 @("%s!"):format("hi")]=], "hi!")
 
+if load("::x:: goto x") then            -- goto is 5.2+
 CHECK("label-untouched", [=[
 let x = 0
 ::top::
 x = x + 1
 if x < 3 then goto top end
-@x]=], 3)
+@x]=], 3) end
 
 -- 7. error line numbers ------------------------------------------------
 CHECKERR("errline-flat", [=[
