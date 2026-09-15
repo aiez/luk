@@ -6,7 +6,7 @@
 `luk` is the **`.luk` language**: Lua plus `fn`, `@` for return,
 `let` locals, `elif`, and comprehensions. Blocks are Lua's own
 (`then`/`do`/`end`), so any Lua is (almost) valid luk and every
-`.luk` line maps 1:1 onto its generated Lua. One ~40-line
+`.luk` line maps 1:1 onto its generated Lua. One ~60-line
 module, `luk.lua`, does whole-source transpilation; it is a pure
 function, with no IO and no side effects.
 
@@ -141,9 +141,10 @@ Runtime, default mode (depth=4, 16 trees built):
     SS-N      53663    9.18s    5.86s    6.15s
 
 Lua 1.5x-2.5x faster than Python. Transpile is whole-source
-gsubs, no line pass: ~2ms for a 250-line file, ~90ms for 10,000
-lines (~95% of a .luk require; plain .lua parses in ~4ms).
-Negligible on any real workload.
+gsubs, no line pass: ~1.2ms for a 250-line file, ~50ms for
+10,000 lines. A .luk require costs ~1.7ms where the same .lua
+parses in ~0.3ms, so transpiling is ~70% of it -- and still
+negligible on any real workload.
 
 ## FILES
 
