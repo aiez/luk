@@ -4,9 +4,11 @@
 --   local f   = assert(load(luk(src), "@foo.luk"))  -- real err lines
 -- The require() hook for .luk modules lives in the "luk" runner.
 -- Lua plus five sigils, all pure same-line rewrites:
---   fn=function  elif=elseif  !=  ^=return  let NAME=V  comprehensions.
+--   fn=function  elif=elseif  @=return  let NAME=V  comprehensions.
 -- Blocks are Lua's own (then/do/end), so every source line maps 1:1
--- onto the generated Lua and error lines always match.
+-- onto the generated Lua and error lines always match. "@" is a
+-- character Lua never uses, so return needs no context: one rule,
+-- and "a ^ b" stays exponentiation.
 -- Full guide + gotchas: README "LANGUAGE REFERENCE".
 
 local function comprehension(a,v,i,c)
@@ -31,15 +33,9 @@ local H = {"(%-%-%[(=*)%[.-%]%2%])", "(%[(=*)%[.-%]%2%])",
 
 -- R: every rewrite luk does, in order.
 local R = {
-  {"!=",                     "~="},
   {"%f[%w_]elif%f[%W]",      "elseif"},
   {"%f[%w_]fn%f[%W]",        "function"},
-  {"(\n[ \t]*)%^[ \t]*",     "%1return "},
-  {"(;[ \t]*)%^[ \t]*",      "%1return "},
-  {"(%f[%w_]then%f[%W][ \t]*)%^[ \t]*",       "%1return "},
-  {"(%f[%w_]do%f[%W][ \t]*)%^[ \t]*",         "%1return "},
-  {"(%f[%w_]else%f[%W][ \t]*)%^[ \t]*",       "%1return "},
-  {"(function[%w_.: \t]*%b()[ \t]*)%^[ \t]*", "%1return "},
+  {"@[ \t]*",                "return "},
   {"%f[%w_]let%f[%W]",       "local"},
   {"%b{}", function(m)
      local e,v,i,c = body(m:sub(2,-2))
@@ -56,8 +52,7 @@ return function(src)
   local s = {}
   local function hide(m) s[#s+1]=m; return "\3"..#s.."\3" end
   for _,p in ipairs(H) do src = src:gsub(p, hide) end
-  src = "\n"..src            -- so "^" can start line 1
   for _,p in ipairs(R) do src = src:gsub(p[1],p[2]) end
   while src:find"\3" do      -- unhide; markers nest ("s" inside --)
     src = src:gsub("\3(%d+)\3", function(n) return s[tonumber(n)] end) end
-  return src:sub(2) end
+  return src end

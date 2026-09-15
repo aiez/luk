@@ -36,115 +36,112 @@ local function CHECKERR(name, src, line)  -- runtime error on given line
 
 -- 1. fn / let / ^ ------------------------------------------------------
 CHECK("fn-let-return", [=[
-let add = fn(a, b) ^a + b end
-^add(2, 3)]=], 5)
+let add = fn(a, b) @a + b end
+@add(2, 3)]=], 5)
 
 CHECK("named-fn", [=[
-fn double(x) ^x * 2 end
-^double(21)]=], 42)
+fn double(x) @x * 2 end
+@double(21)]=], 42)
 
 CHECK("let-forward-decl", [=[
 let f
-f = fn(n) if n < 2 then ^1 end
-  ^n * f(n - 1) end
-^f(4)]=], 24)
+f = fn(n) if n < 2 then @1 end
+  @n * f(n - 1) end
+@f(4)]=], 24)
 
 CHECK("let-multi", [=[
 let a, b = 2, 3
-^a * b]=], 6)
+@a * b]=], 6)
 
 CHECK("return-after-then-else", [=[
-let pick = fn(b) if b then ^"yes" else ^"no" end end
-^pick(true)]=], "yes")
+let pick = fn(b) if b then @"yes" else @"no" end end
+@pick(true)]=], "yes")
 
 CHECK("return-after-do", [=[
-let f = fn() for _ = 1, 1 do ^7 end end
-^f()]=], 7)
+let f = fn() for _ = 1, 1 do @7 end end
+@f()]=], 7)
 
 CHECK("return-after-semicolon", [=[
-let f = fn(x) let y = x * 2; ^y end
-^f(4)]=], 8)
+let f = fn(x) let y = x * 2; @y end
+@f(4)]=], 8)
 
 CHECK("return-multiline-block", [=[
 let mul = fn(a)
   let b = a * 2
-  ^b end
-^mul(7)]=], 14)
+  @b end
+@mul(7)]=], 14)
 
--- 2. elif / != / infix ^ ----------------------------------------------
+-- 2. elif / infix ^ ---------------------------------------------------
 CHECK("elif-chain", [=[
 fn sign(x)
-  if x > 0 then ^1
-  elif x < 0 then ^-1
-  else ^0 end end
-^sign(-5)]=], -1)
-
-CHECK("not-equal", [=[
-^1 != 2]=], true)
+  if x > 0 then @1
+  elif x < 0 then @-1
+  else @0 end end
+@sign(-5)]=], -1)
 
 CHECK("infix-caret", [=[
-fn f(x) ^x ^ 2 end
-^f(3)]=], 9.0)
+fn f(x) @x ^ 2 end
+@f(3)]=], 9.0)
 
 -- 3. anon fns ----------------------------------------------------------
 CHECK("anon-in-call", [=[
 let t = {3, 1, 2}
-table.sort(t, fn(a, b) ^a > b end)
-^t[1] ]=], 3)
+table.sort(t, fn(a, b) @a > b end)
+@t[1] ]=], 3)
 
 CHECK("anon-comma-separated", [=[
-let fs = {fn(x) ^x + 1 end, fn(x) ^x * 10 end}
-^fs[1](1) + fs[2](2)]=], 22)
+let fs = {fn(x) @x + 1 end, fn(x) @x * 10 end}
+@fs[1](1) + fs[2](2)]=], 22)
 
 CHECK("anon-nested", [=[
-let nth = fn(n) ^fn(t) ^t[n] end end
-^nth(2)({4, 5, 6})]=], 5)
+let nth = fn(n) @fn(t) @t[n] end end
+@nth(2)({4, 5, 6})]=], 5)
 
 CHECK("anon-multiline", [=[
 let sorter = fn(a, b)
-  if a == b then ^false end
-  ^a < b end
-^sorter(1, 2)]=], true)
+  if a == b then @false end
+  @a < b end
+@sorter(1, 2)]=], true)
 
 -- 4. comprehensions ----------------------------------------------------
 CHECK("comprehension-filtered", [=[
-fn evens(t) ^[x for x in t if x % 2 == 0] end
-^#evens({1, 2, 3, 4, 6})]=], 3)
+fn evens(t) @[x for x in t if x % 2 == 0] end
+@#evens({1, 2, 3, 4, 6})]=], 3)
 
 CHECK("comprehension-multiline", [=[
 let u = [x * 10 for _, x in ipairs({1, 2,
                                  3})]
-^u[3] ]=], 30)
+@u[3] ]=], 30)
 
 CHECK("dict-comprehension", [=[
 let d = {v, k for k, v in {a = 1}}
-^d[1] ]=], "a")
+@d[1] ]=], "a")
 
 -- 5. comments, strings, misc sigils ------------------------------------
 CHECK("trailing-comments", [=[
 fn f()  -- make f
-  ^1    -- one
+  @1    -- one
 end
 -- done
-^f()]=], 1)
+@f()]=], 1)
 
 CHECK("string-in-comment", [=[
 -- keeps require"x" intact
-^1]=], 1)
+@1]=], 1)
 
 CHECK("string-colon-space", [=[
 let s = "a: b"
-^s]=], "a: b")
+@s]=], "a: b")
 
 CHECK("method-colon-untouched", [=[
-^("%s!"):format("hi")]=], "hi!")
+@("%s!"):format("hi")]=], "hi!")
 
 CHECK("label-untouched", [=[
 let x = 0
 ::top::
 x = x + 1
 if x < 3 then goto top end
-^x]=], 3)
+@x]=], 3)
 
 -- 6. error line numbers ------------------------------------------------
 CHECKERR("errline-flat", [=[

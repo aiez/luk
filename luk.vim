@@ -12,18 +12,12 @@ syntax match   lukKeyword     /\<fn\>/
 syntax keyword lukDeclare     let
 syntax keyword lukConditional elif
 
-" `^` = return, only at statement start: line start or after
-" `;` / `then` / `do` / `else` / `fn(...)`.
-syntax match lukReturn /^\s*\zs\^/
-syntax match lukReturn /\%(;\|\<then\>\|\<do\>\|\<else\>\)\s*\zs\^/
-syntax match lukReturn /\<fn\>\s*([^)]*)\s*\zs\^/
-
-syntax match lukNotEq    /!=/
+" `@` = return. Lua uses no `@`, so it needs no context.
+syntax match lukReturn /@/
 
 highlight default link lukKeyword     Keyword
 highlight default link lukConditional Conditional
 highlight default link lukReturn      Special
 highlight default link lukDeclare     Operator
-highlight default link lukNotEq       Operator
 
 let b:current_syntax = "luk"

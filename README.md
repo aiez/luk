@@ -3,8 +3,8 @@
 
 ### [https://github.com/aiez/luk](https://github.com/aiez/luk)
 
-`luk` is the **`.luk` language**: Lua plus `fn`, `^` for return,
-`let` locals, `!=`, `elif`, and comprehensions. Blocks are Lua's
+`luk` is the **`.luk` language**: Lua plus `fn`, `@` for return,
+`let` locals, `elif`, and comprehensions. Blocks are Lua's
 own (`then`/`do`/`end`), so any Lua is (almost) valid luk and
 every `.luk` line maps 1:1 onto its generated Lua. One ~60-line
 module, `luk.lua`, does whole-source transpilation; it is a pure
@@ -58,40 +58,39 @@ numbers exactly and error messages point at real `.luk` lines.
 
     fn                 -> function
     elif               -> elseif
-    !=                 -> ~=     (Lua's not-equal)
     let NAME = EXPR    -> local NAME = EXPR
     let A, B = X, Y    -> local A, B = X, Y
     let A, B           -> local A, B   (forward declaration)
 
 ### Return
 
-    ^EXPR              -> return EXPR
+    @EXPR              -> return EXPR
 
-`^` means return only at a statement start: start of line, or
-after `;`, `then`, `do`, `else`, or a `fn(...)` parameter list.
-Infix exponentiation `a ^ b` is untouched.
+Lua uses no `@`, so return needs no context -- one rule, no
+statement-position analysis, and `a ^ b` is still exponentiation:
 
-    let double = fn(z) ^z * 2 end
-    let pick   = fn(b) if b then ^"yes" else ^"no" end end
+    let double = fn(z) @z * 2 end
+    let pick   = fn(b) if b then @"yes" else @"no" end end
+    let sd     = fn(t) @var(t) ^ 0.5 end
 
 ### Functions
 
 `fn` is just `function`, so every Lua shape works, on one line
 or many:
 
-    fn double(x) ^x * 2 end           -- named
-    let f = fn(a) ^a + 1 end          -- one-liner
-    sort(t, fn(a, b) ^a.k < b.k end)  -- mid-expression
+    fn double(x) @x * 2 end           -- named
+    let f = fn(a) @a + 1 end          -- one-liner
+    sort(t, fn(a, b) @a.k < b.k end)  -- mid-expression
     let g = fn(a)                     -- multi-line
       let b = a * 2
-      ^b end
+      @b end
 
 House style parks `end` at the end of the last body line:
 
     fn sign(x)                        function sign(x)
-      if x > 0 then ^1                  if x > 0 then return 1
-      elif x < 0 then ^-1               elseif x < 0 then return -1
-      else ^0 end end                   else return 0 end end
+      if x > 0 then @1                  if x > 0 then return 1
+      elif x < 0 then @-1               elseif x < 0 then return -1
+      else @0 end end                   else return 0 end end
     print(sign(3))                    print(sign(3))
 
 ### Comprehensions (may span lines; no nesting)
@@ -119,7 +118,7 @@ House style parks `end` at the end of the last body line:
   - Long strings/comments `[[...]]` and goto labels `::x::`
     pass through untouched.
   - Indentation is not significant; indent however you like.
-  - `ft=lua` is survivable -- only `fn`, `^`, `let`, `!=` and
+  - `ft=lua` is survivable -- only `fn`, `@`, `let` and
     comprehensions are foreign -- but `ft=luk` + `luk.vim`
     colours them properly. The files' modelines say `ft=luk`.
 

@@ -1,5 +1,5 @@
 package = "luk"
-version = "0.4-1"
+version = "0.5-1"
 
 source = {
   url = "git+https://github.com/aiez/luk",
@@ -8,8 +8,8 @@ source = {
 description = {
   summary  = "tiny .luk -> Lua transpiler (~60-line module) + cli + battery",
   detailed = [[
-    luk is the .luk language: Lua plus `fn`, `^` for return,
-    `let` locals, `!=`, `elif`, and comprehensions. Blocks are
+    luk is the .luk language: Lua plus `fn`, `@` for return,
+    `let` locals, `elif`, and comprehensions. Blocks are
     Lua's own (then/do/end), so any Lua is (almost) valid luk
     and every .luk line maps 1:1 onto its generated Lua, which
     keeps the source's line numbers exactly.
