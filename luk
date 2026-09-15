@@ -7,6 +7,13 @@
 package.path = (arg[0]:gsub("[^/]*$", "")) .. "?.lua;" .. package.path
 local transpile = require"luk"
 
+table.insert(package.searchers or package.loaders, 2, function(name)
+  local path = package.searchpath(name, (package.path:gsub("%.lua",".luk")))
+  if not path then return end
+  local g = assert(io.open(path))
+  local src = g:read"*a"; g:close()
+  return assert(load(transpile(src), "@"..path)), path end)
+
 local i = arg[1] == "-d" and 2 or 1
 local file = arg[i]
 local f = file and io.open(file)
@@ -18,4 +25,4 @@ if i == 2 then io.write(lua); os.exit(0) end
 local a = {[0] = file}
 for j = 2, #arg do a[#a+1] = arg[j] end
 arg = a
-assert(load(lua, "@"..file))(table.unpack(a))
+assert(load(lua, "@"..file))((table.unpack or unpack)(a))

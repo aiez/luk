@@ -1,8 +1,8 @@
--- luk.lua : whole-source ".luk" -> Lua transpiler. One file, two modes:
---   require"luk"             -> installs require() hook for .luk modules
---                               (chunk name @foo.luk = real error lines),
---                               returns the transpile fn
---   lua luk.lua <in >out     -> stdin/stdout filter
+-- luk.lua : whole-source ".luk" -> Lua transpiler. Pure function,
+-- no side effects, no IO:
+--   local luk = require"luk"
+--   local f   = assert(load(luk(src), "@foo.luk"))  -- real err lines
+-- The require() hook for .luk modules lives in the "luk" runner.
 -- Lua plus five sigils, all pure same-line rewrites:
 --   fn=function  elif=elseif  !=  ^=return  let NAME=V  comprehensions.
 -- Blocks are Lua's own (then/do/end), so every source line maps 1:1
@@ -57,12 +57,4 @@ local function transpile(src)
     src = src:gsub("\3(%d+)\3", function(n) return s[tonumber(n)] end) end
   return src:sub(2) end
 
-table.insert(package.searchers or package.loaders, 2, function(name)
-  local path = package.searchpath(name, (package.path:gsub("%.lua",".luk")))
-  if not path then return end
-  local f = assert(io.open(path))
-  local src = f:read"*a"; f:close()
-  return assert(load(transpile(src), "@"..path)), path end)
-
-if ... then return transpile end   -- else: lua luk.lua <IN >OUT
-io.write(transpile(io.read"*a"))
+return transpile

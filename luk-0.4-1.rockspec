@@ -6,7 +6,7 @@ source = {
 }
 
 description = {
-  summary  = "tiny .luk -> Lua transpiler (~70-line module) + cli + battery",
+  summary  = "tiny .luk -> Lua transpiler (~60-line module) + cli + battery",
   detailed = [[
     luk is the .luk language: Lua plus `fn`, `^` for return,
     `let` locals, `!=`, `elif`, and comprehensions. Blocks are
@@ -14,10 +14,11 @@ description = {
     and every .luk line maps 1:1 onto its generated Lua, which
     keeps the source's line numbers exactly.
 
-    The module returns a single function and installs a
-    require() hook for .luk modules:
+    The module is a pure function, no IO and no side effects:
       local luk = require("luk")
       local lua_src = luk(luk_src)
+    The bundled "luk" cli adds a require() hook, so .luk files
+    can require each other.
 
     Ships with:
       luk        cli: transpile + run (luk FILE.luk [args...];

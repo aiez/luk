@@ -6,9 +6,9 @@
 `luk` is the **`.luk` language**: Lua plus `fn`, `^` for return,
 `let` locals, `!=`, `elif`, and comprehensions. Blocks are Lua's
 own (`then`/`do`/`end`), so any Lua is (almost) valid luk and
-every `.luk` line maps 1:1 onto its generated Lua. One ~70-line
-module, `luk.lua`, does whole-source transpilation and installs
-a `require()` hook for `.luk` modules.
+every `.luk` line maps 1:1 onto its generated Lua. One ~60-line
+module, `luk.lua`, does whole-source transpilation; it is a pure
+function, with no IO and no side effects.
 
 ```bash
 git clone https://github.com/aiez/luk && cd luk
@@ -33,13 +33,16 @@ For the optimizer shipped with luk (`fft.luk`) see [fft.md](fft.md).
     ./luk -d FILE.luk            # dump generated Lua
     lua -e 'io.write(require"luk"(io.read"*a"))' <IN.luk >OUT.lua
     -- or programmatically:
-    --   local lua_src = require("luk")(luk_src)
+    --   local luk = require("luk")
+    --   local f   = assert(load(luk(src), "@foo.luk"))
 
-Requiring `luk` also installs a `require()` hook: `require"xx"`
-loads `xx.luk` if present (transpiled, with real error line
-numbers), else falls back to plain Lua. The hook searches
-`package.path` with `.lua` swapped for `.luk`, so installed
-rocks work too.
+`luk.lua` is only the transpiler. The `luk` runner adds a
+`require()` hook, so `.luk` files can require each other:
+`require"xx"` loads `xx.luk` if present (transpiled, with real
+error line numbers), else falls back to plain Lua. The hook
+searches `package.path` with `.lua` swapped for `.luk`, so
+installed rocks work too. Pass `"@NAME.luk"` to `load` to keep
+error lines pointing at the `.luk` source.
 
 ## LANGUAGE REFERENCE
 
@@ -132,11 +135,11 @@ Negligible on any real workload.
 
 ## FILES
 
-    luk.lua      .luk -> .lua transpiler + require() hook
+    luk.lua      .luk -> .lua transpiler (pure fn, no IO)
     tests.lua    transpiler regression tests (lua tests.lua)
     test_*.luk   lib/stats/fft checks (make tests, or
                  ./luk test_lib.luk [NAME...])
-    luk          runner: transpile + run (./luk FILE.luk)
+    luk          runner: .luk require() hook, transpile + run
     lib.luk      "battery": portable PRNG (srand/rand/any/shuffle),
                  o pretty-print, push, keys/order, nth/lt/gt,
                  keysort, slice, new, deepCopy, path, csv iterator,
