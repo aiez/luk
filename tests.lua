@@ -190,6 +190,23 @@ CHECK("method-colon-untouched-2", [=[
 let s = "hi"
 @s:upper()]=], "HI")
 
+CHECK("blank-lines-in-block", [=[
+fn f(x):
+
+  let y = x * 2
+
+  @y
+
+@f(21)]=], 42)
+
+CHECK("blank-line-in-chain", [=[
+fn c(x):
+  if (x < 1): @1
+
+  elif (x > 9): @9
+  @x
+@c(5)]=], 5)
+
 -- 6. comments, strings, misc sigils ------------------------------------
 CHECK("trailing-comments", [=[
 fn f()  -- make f
@@ -228,6 +245,15 @@ fn f()
   if 1 > 0 then
     error("bam") end end
 f()]=], 3)
+
+-- 8. CRLF: "[^\r\n]*\r?\n" in blocks.lua, else ":\r" is not a header
+do
+  n = n + 1
+  local lua = transpile("fn f(x):\r\n  @x * 2\r\n@f(21)\r\n")
+  local f = load(lua)
+  local ok, got = false, nil
+  if f then ok, got = pcall(f) end
+  if not ok or got ~= 42 then report("crlf", lua, got, 42) end end
 
 print(("%d/%d pass"):format(n - fails, n))
 os.exit(fails == 0 and 0 or 1)

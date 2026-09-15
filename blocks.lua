@@ -19,7 +19,7 @@ local cont = {elif=1, ["else"]=1}   -- continue a chain, don't reopen
 
 return function(src)
   local out, stk, d = {}, {}, 0
-  for ln in (src.."\n"):gmatch"([^\n]*)\n" do
+  for ln in (src.."\n"):gmatch"([^\r\n]*)\r?\n" do  -- CRLF safe
     if d == 0 and ln:find"%S" then         -- d>0: inside ( [ { , so
       local ind, w = ln:match"^([ \t]*)([%w_]*)"   -- hanging indents
       local pre, lim = "", #ind + (cont[w] and 1 or 0)   -- are safe
