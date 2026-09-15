@@ -1,3 +1,7 @@
+# generated from the matching .luk by:  make NAME.lua
 fft.lua
 lib.lua
 stats.lua
+test_fft.lua
+test_lib.lua
+test_stats.lua
