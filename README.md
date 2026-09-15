@@ -160,9 +160,14 @@ there and stripped if present:
   - Long strings/comments `[[...]]` and goto labels `::x::`
     pass through untouched.
   - Indentation is not significant; indent however you like.
-  - `ft=lua` is survivable -- only `fn`, `@`, `let` and
-    comprehensions are foreign -- but `ft=luk` + `luk.vim`
-    colours them properly. The files' modelines say `ft=luk`.
+  - `ft=lua` is survivable while a file sticks to explicit
+    `then`/`do`/`end` -- only `fn`, `@`, `let` and comprehensions
+    are foreign -- which is why the shipped sources use it. Use
+    `ft=luk` + `luk.vim` to colour those, and note that Lua
+    *treesitter* cannot parse `:` one-liners: its error recovery
+    re-pairs the quotes on such a line and the rest of the file
+    renders as one string. Any file using `:` blocks wants
+    `ft=luk`.
 
 ## PERFORMANCE
 
