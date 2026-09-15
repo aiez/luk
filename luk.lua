@@ -11,19 +11,21 @@
 -- and "a ^ b" stays exponentiation.
 -- Full guide + gotchas: README "LANGUAGE REFERENCE".
 
-local function comprehension(a,v,i,c)
-  if not v:find"," and not i:find"%(" then
-    v,i = "_,"..v, "ipairs("..i..")"
-  elseif not i:find"%(" then i = "pairs("..i..")" end
-  local g = c and ("if "..c.." then ") or ""
-  local z = c and "end " or ""
+-- PUT is a statement ("_r[#_r+1]=E", "_r[K]=E"), not the element
+-- expression E. IFF/FI are the optional "if C then" ... "end".
+local function comprehension(put,v,it,c)
+  if not v:find"," and not it:find"%(" then
+    v,it = "_,"..v, "ipairs("..it..")"
+  elseif not it:find"%(" then it = "pairs("..it..")" end
+  local iff = c and ("if "..c.." then ") or ""
+  local fi  = c and "end " or ""
   return ("(function() local _r={} for %s in %s "..
-          "do %s%s %send return _r end)()"):format(v,i,g,a,z) end
+          "do %s%s %send return _r end)()"):format(v,it,iff,put,fi) end
 
-local function body(n)  -- "E for V in I [if C]" -> E,V,I,C?
-  local e,v,i,c = n:match"^(.-) for (.-) in (.-) if (.+)$"
-  if not e then e,v,i = n:match"^(.-) for (.-) in (.+)$" end
-  return e,v,i,c end
+local function body(n)  -- "E for V in ITER [if C]" -> E,V,ITER,C?
+  local e,v,it,c = n:match"^(.-) for (.-) in (.-) if (.+)$"
+  if not e then e,v,it = n:match"^(.-) for (.-) in (.+)$" end
+  return e,v,it,c end
 
 -- The language is two data tables and a nine-line engine.
 -- H: literals hidden before any rewrite (long comments, long
@@ -38,13 +40,13 @@ local R = {
   {"@[ \t]*",                "return "},
   {"%f[%w_]let%f[%W]",       "local"},
   {"%b{}", function(m)
-     local e,v,i,c = body(m:sub(2,-2))
+     local e,v,it,c = body(m:sub(2,-2))
      local k,ve; if e then k,ve = e:match"^(.-),(.+)$" end
-     if k then return comprehension("_r["..k.."]="..ve,v,i,c) end
+     if k then return comprehension("_r["..k.."]="..ve,v,it,c) end
      return m end},
   {"%b[]", function(m)
-     local e,v,i,c = body(m:sub(2,-2))
-     if e then return comprehension("_r[#_r+1]="..e,v,i,c) end
+     local e,v,it,c = body(m:sub(2,-2))
+     if e then return comprehension("_r[#_r+1]="..e,v,it,c) end
      return m end},
 }
 
