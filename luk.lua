@@ -23,34 +23,39 @@ local function body(n)  -- "E for V in I [if C]" -> E,V,I,C?
   if not e then e,v,i = n:match"^(.-) for (.-) in (.+)$" end
   return e,v,i,c end
 
+-- The language is two data tables and a nine-line engine.
+-- H: literals hidden before any rewrite (long comments, long
+-- strings, "", '', -- ...) so no sigil below looks inside them.
+local H = {"(%-%-%[(=*)%[.-%]%2%])", "(%[(=*)%[.-%]%2%])",
+           '"[^"\n]*"', "'[^'\n]*'", "%-%-[^\n]*"}
+
+-- R: every rewrite luk does, in order.
+local R = {
+  {"!=",                     "~="},
+  {"%f[%w_]elif%f[%W]",      "elseif"},
+  {"%f[%w_]fn%f[%W]",        "function"},
+  {"(\n[ \t]*)%^[ \t]*",     "%1return "},
+  {"(;[ \t]*)%^[ \t]*",      "%1return "},
+  {"(%f[%w_]then%f[%W][ \t]*)%^[ \t]*",       "%1return "},
+  {"(%f[%w_]do%f[%W][ \t]*)%^[ \t]*",         "%1return "},
+  {"(%f[%w_]else%f[%W][ \t]*)%^[ \t]*",       "%1return "},
+  {"(function[%w_.: \t]*%b()[ \t]*)%^[ \t]*", "%1return "},
+  {"%f[%w_]let[ \t]+([%w_][%w_, \t]-)([ \t]*=)", "local %1%2"},
+  {"%b{}", function(m)
+     local e,v,i,c = body(m:sub(2,-2))
+     local k,ve; if e then k,ve = e:match"^(.-),(.+)$" end
+     if k then return comprehension("_r["..k.."]="..ve,v,i,c) end
+     return m end},
+  {"%b[]", function(m)
+     local e,v,i,c = body(m:sub(2,-2))
+     if e then return comprehension("_r[#_r+1]="..e,v,i,c) end
+     return m end},
+}
+
 return function(src)
   local s = {}
   local function hide(m) s[#s+1]=m; return "\3"..#s.."\3" end
-  local H = {           -- long comments, long strings, "", '', -- ...
-    {"(%-%-%[(=*)%[.-%]%2%])", hide}, {"(%[(=*)%[.-%]%2%])", hide},
-    {'"[^"\n]*"', hide}, {"'[^'\n]*'", hide}, {"%-%-[^\n]*", hide}}
-  local R = {
-    {"!=",                     "~="},
-    {"%f[%w_]elif%f[%W]",      "elseif"},
-    {"%f[%w_]fn%f[%W]",        "function"},
-    {"(\n[ \t]*)%^[ \t]*",     "%1return "},
-    {"(;[ \t]*)%^[ \t]*",      "%1return "},
-    {"(%f[%w_]then%f[%W][ \t]*)%^[ \t]*",       "%1return "},
-    {"(%f[%w_]do%f[%W][ \t]*)%^[ \t]*",         "%1return "},
-    {"(%f[%w_]else%f[%W][ \t]*)%^[ \t]*",       "%1return "},
-    {"(function[%w_.: \t]*%b()[ \t]*)%^[ \t]*", "%1return "},
-    {"%f[%w_]let[ \t]+([%w_][%w_, \t]-)([ \t]*=)", "local %1%2"},
-    {"%b{}", function(m)
-       local e,v,i,c = body(m:sub(2,-2))
-       local k,ve; if e then k,ve = e:match"^(.-),(.+)$" end
-       if k then return comprehension("_r["..k.."]="..ve,v,i,c) end
-       return m end},
-    {"%b[]", function(m)
-       local e,v,i,c = body(m:sub(2,-2))
-       if e then return comprehension("_r[#_r+1]="..e,v,i,c) end
-       return m end},
-  }
-  for _,p in ipairs(H) do src = src:gsub(p[1],p[2]) end
+  for _,p in ipairs(H) do src = src:gsub(p, hide) end
   src = "\n"..src            -- so "^" can start line 1
   for _,p in ipairs(R) do src = src:gsub(p[1],p[2]) end
   while src:find"\3" do      -- unhide; markers nest ("s" inside --)
