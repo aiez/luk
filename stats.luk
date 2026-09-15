@@ -5,8 +5,8 @@
 --         if S.sames(xs, ys) then ...
 
 let L = require("lib")
-let sort, keys, keysort = L.sort, L.keys, L.keysort
-let abs, max = math.abs, math.max
+let sort, keys, keysort, slice = L.sort, L.keys, L.keysort, L.slice
+let abs, max, floor = math.abs, math.max, math.floor
 
 let welfords = fn(xs)          -- batch mu, sd of a list (Welford)
   let n, mu, m2 = 0, 0, 0
@@ -20,7 +20,7 @@ let welfords = fn(xs)          -- batch mu, sd of a list (Welford)
 let bisect = fn(t, x, strict)  -- count t[i]<=x (<x if strict); t sorted
   let lo, hi = 1, #t
   while lo <= hi do
-    let mid = (lo + hi) // 2
+    let mid = floor((lo + hi) / 2)
     if strict and t[mid] < x or (not strict) and t[mid] <= x then
       lo = mid + 1
     else
@@ -48,10 +48,10 @@ let ks = fn(xs, ys)            -- Kolmogorov-Smirnov gap; pre-sorted
 
 let sames = fn(xs, ys, eps, cliffs, ksconf)
   let eps, cliffs, ksconf = eps or 0, cliffs or 0.195, ksconf or 1.36
-  let a = sort({table.unpack(xs)})
-  let b = sort({table.unpack(ys)})
+  let a = sort(slice(xs))
+  let b = sort(slice(ys))
   let n, p = #a, #b
-  if abs(a[n//2+1] - b[p//2+1]) <= eps then ^true end
+  if abs(a[floor(n/2)+1] - b[floor(p/2)+1]) <= eps then ^true end
   if cliffsDelta(a, b) > cliffs then ^false end
   ^ks(a, b) <= ksconf * ((n + p) / (n * p)) ^ 0.5 end
 
