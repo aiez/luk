@@ -1,4 +1,4 @@
--- vim: ft=luk ts=2 sw=2 sts=2 et :
+-- vim: ft=lua ts=2 sw=2 sts=2 et :
 -- stats.luk: non-parametric stats for comparing treatments.
 -- (c) 2026, Tim Menzies <timm@ieee.org>, MIT license
 -- usage:  let S = require("stats")
