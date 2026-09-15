@@ -148,8 +148,16 @@ there and stripped if present:
     - 2 vars, no "(" in ITER -> pairs(ITER)
     - else passed through as-is
 
-  Limit: a dict comprehension's key expression must not contain
-  a bare comma.
+  Limits:
+
+    - A dict comprehension's key expression must not contain a
+      bare comma: `{f(a,b), v for ...}` splits at the wrong one.
+    - Comprehensions do not nest. `[[y for y in r] for r in rows]`
+      fails: the `for`/`in` split takes the *inner* `for`, so the
+      outer one never forms. Name the inner one instead:
+
+          let each = fn(r) @[y * 10 for y in r] end
+          let x    = [each(r) for r in rows]
 
 ### Gotchas
 
