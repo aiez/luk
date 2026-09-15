@@ -23,7 +23,7 @@ local function body(n)  -- "E for V in I [if C]" -> E,V,I,C?
   if not e then e,v,i = n:match"^(.-) for (.-) in (.+)$" end
   return e,v,i,c end
 
-local function transpile(src)
+return function(src)
   local s = {}
   local function hide(m) s[#s+1]=m; return "\3"..#s.."\3" end
   local H = {           -- long comments, long strings, "", '', -- ...
@@ -56,5 +56,3 @@ local function transpile(src)
   while src:find"\3" do      -- unhide; markers nest ("s" inside --)
     src = src:gsub("\3(%d+)\3", function(n) return s[tonumber(n)] end) end
   return src:sub(2) end
-
-return transpile
