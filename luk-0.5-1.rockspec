@@ -44,7 +44,7 @@ build = {
   install = {
     bin  = { luk = "luk" },
     lua  = { lib = "lib.luk", stats = "stats.luk", fft = "fft.luk" },
-    conf = { "README.md", "luk.vim", "tests.lua",
+    conf = { "README.md", "tests.lua",
              "test_lib.luk", "test_stats.luk", "test_fft.luk" },
   },
 }

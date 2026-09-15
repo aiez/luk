@@ -20,9 +20,9 @@ make fft.lua                  # same, via Makefile
 
 For the optimizer shipped with luk (`fft.luk`) see [fft.md](fft.md).
 
-**Sections:** [NAME](#name) | [SYNOPSIS](#synopsis) | [LANGUAGE REFERENCE](#language-reference) | [PERFORMANCE](#performance) | [FILES](#files) | [VIM SUPPORT](#vim-support) | [SEE ALSO](#see-also) | [LICENSE](#license) | [AUTHOR](#author)
+**Sections:** [NAME](#name) | [SYNOPSIS](#synopsis) | [LANGUAGE REFERENCE](#language-reference) | [PERFORMANCE](#performance) | [FILES](#files) | [SEE ALSO](#see-also) | [LICENSE](#license) | [AUTHOR](#author)
 
-**Files:** [luk.lua](https://github.com/aiez/luk#file-luk-lua) | [fft.luk](https://github.com/aiez/luk#file-fft-luk) | [lib.luk](https://github.com/aiez/luk#file-lib-luk) | [stats.luk](https://github.com/aiez/luk#file-stats-luk) | [tests.lua](https://github.com/aiez/luk#file-tests-lua) | [fft.md](https://github.com/aiez/luk#file-fft-md) | [luk.rc](https://github.com/aiez/luk#file-luk-rc) | [luk.vim](https://github.com/aiez/luk#file-luk-vim)
+**Files:** [luk.lua](https://github.com/aiez/luk#file-luk-lua) | [fft.luk](https://github.com/aiez/luk#file-fft-luk) | [lib.luk](https://github.com/aiez/luk#file-lib-luk) | [stats.luk](https://github.com/aiez/luk#file-stats-luk) | [tests.lua](https://github.com/aiez/luk#file-tests-lua) | [fft.md](https://github.com/aiez/luk#file-fft-md) | [luk.rc](https://github.com/aiez/luk#file-luk-rc)
 
 ## NAME
 
@@ -160,14 +160,13 @@ there and stripped if present:
   - Long strings/comments `[[...]]` and goto labels `::x::`
     pass through untouched.
   - Indentation is not significant; indent however you like.
-  - `ft=lua` is survivable while a file sticks to explicit
-    `then`/`do`/`end` -- only `fn`, `@`, `let` and comprehensions
-    are foreign -- which is why the shipped sources use it. Use
-    `ft=luk` + `luk.vim` to colour those, and note that Lua
-    *treesitter* cannot parse `:` one-liners: its error recovery
-    re-pairs the quotes on such a line and the rest of the file
-    renders as one string. Any file using `:` blocks wants
-    `ft=luk`.
+  - `.luk` files carry a `ft=lua` modeline and Lua's own syntax
+    covers them; only `fn`, `@`, `let` and comprehensions are
+    foreign. One exception: Lua *treesitter* cannot parse a `:`
+    one-liner -- its error recovery re-pairs the quotes on that
+    line and the rest of the file renders as one string -- so a
+    file using `:` blocks wants regex `syntax on`, not
+    treesitter.
 
 ## PERFORMANCE
 
@@ -201,11 +200,6 @@ Negligible on any real workload.
     Makefile     rule:  %.lua: %.luk luk.lua
     sandbox/     retired v0.1 indentation-based dialect (luk2)
                  (v0.3's ":" block syntax is retired too)
-
-## VIM SUPPORT
-
-    syntax: luk.vim (Lua syntax + luk overlay)
-    shell with .luk-aware vi: make fsh (see luk.rc)
 
 ## SEE ALSO
 
