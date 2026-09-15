@@ -29,209 +29,209 @@ let add, adds, disty, qty, grows, show
 let Sym = fn() @{symp=true, has={}} end
 let Num = fn(n,mu,m2) @{nump=true,n=n or 0,mu=mu or 0,m2=m2 or 0} end
 
-let sd = fn(num)
-  if num.n < 2 then @0 end
-  @sqrt(max(0, num.m2) / (num.n - 1)) end
+let sd = fn(num):
+  if num.n < 2: @0
+  @sqrt(max(0, num.m2) / (num.n - 1))
 
-let welford = fn(num, v, w)
+let welford = fn(num, v, w):
   let n = num.n + w
-  if n <= 0 then @Num() end
+  if n <= 0: @Num()
   let d = v - num.mu
   let mu = num.mu + w * d / n
-  @Num(n, mu, num.m2 + w * d * (v - mu)) end
+  @Num(n, mu, num.m2 + w * d * (v - mu))
 
-let norm = fn(num, v)
+let norm = fn(num, v):
   let z = (v - num.mu) / (sd(num) + 1/BIG)
-  @1 / (1 + exp(-1.7 * max(-3, min(3, z)))) end
+  @1 / (1 + exp(-1.7 * max(-3, min(3, z))))
 
-let merge = fn(i, j, w)
+let merge = fn(i, j, w):
   let w = w or 1
-  if i.symp then
+  if i.symp:
     let u = Sym()
-    for _, p in ipairs({{i,1}, {j,w}}) do
-      for k, vv in pairs(p[1].has) do
-        u.has[k] = (u.has[k] or 0) + p[2] * vv end end
-    @u end
+    for _, p in ipairs({{i,1}, {j,w}}):
+      for k, vv in pairs(p[1].has):
+        u.has[k] = (u.has[k] or 0) + p[2] * vv
+    @u
   let n = i.n + w * j.n
-  if n <= 0 then @Num() end
+  if n <= 0: @Num()
   let mu = (i.n*i.mu + w * j.n * j.mu) / n
   let d = j.mu - i.mu
   let m2 = i.m2 + w*j.m2 + w*d*d*i.n*j.n / n
-  @Num(n, mu, m2) end
+  @Num(n, mu, m2)
 
 -- 2. Data ---------------------------------------------------
-let Data = fn(src)
+let Data = fn(src):
   let it = {names={}, klass=nil, x={}, y={},
          goal={}, cols={}, rows={}}
-  let roles = fn(names)
+  let roles = fn(names):
     it.names = names
-    for at, s in ipairs(names) do
+    for at, s in ipairs(names):
       let z = s:sub(-1)
       let first = s:sub(1,1)
       it.cols[at] = (first == first:lower() and Sym or Num)()
-      if z == "-" or z == "+" or z == "!" then
+      if z == "-" or z == "+" or z == "!":
         table.insert(it.y, at)
         it.goal[at] = (z == "+") and 1 or 0
-      elif z ~= "X" then table.insert(it.x, at) end
-      if z == "!" then it.klass = at end end end
+      elif z ~= "X": table.insert(it.x, at)
+      if z == "!": it.klass = at
   roles(src[1])
-  for i = 2, #src do it = add(it, src[i]) end
-  @it end
+  for i = 2, #src: it = add(it, src[i])
+  @it
 
-add = fn(it, v)
-  if v == "?" then @it end
-  if it.symp then it.has[v] = (it.has[v] or 0) + 1
-  elif it.nump then it = welford(it, v, 1)
-  else
+add = fn(it, v):
+  if v == "?": @it
+  if it.symp: it.has[v] = (it.has[v] or 0) + 1
+  elif it.nump: it = welford(it, v, 1)
+  else:
     table.insert(it.rows, v)
-    it.cols = [add(it.cols[at], x) for at, x in ipairs(v)] end
-  @it end
+    it.cols = [add(it.cols[at], x) for at, x in ipairs(v)]
+  @it
 
-adds = fn(src, it)
+adds = fn(src, it):
   let it = it or Num()
-  for _, x in ipairs(src) do it = add(it, x) end
-  @it end
+  for _, x in ipairs(src): it = add(it, x)
+  @it
 
 -- 3. Discretization ----------------------------------------
-let cutsSyms = fn(bins, tot, hi, at)     -- iterator of candidate cuts
+let cutsSyms = fn(bins, tot, hi, at):    -- iterator of candidate cuts
   let k, l = nil, nil
-  @fn()
+  @fn():
     k, l = next(bins, k)
-    if k ~= nil then
+    if k ~= nil:
       @{score=l.m2 + merge(tot, l, -1).m2,
-         at=at, lo=hi[k], hi=hi[k], leaf=l} end end end
+         at=at, lo=hi[k], hi=hi[k], leaf=l}
 
-let cutsNums = fn(bins, tot, hi, at)     -- iterator of candidate cuts
+let cutsNums = fn(bins, tot, hi, at):    -- iterator of candidate cuts
   let ks = sort([k for k, _ in pairs(bins)])
   let l, j = Num(), 0
-  @fn()
+  @fn():
     j = j + 1
-    if j < #ks then
+    if j < #ks:
       l = merge(l, bins[ks[j]])
       @{score=l.m2 + merge(tot, l, -1).m2,
-         at=at, lo=-BIG, hi=hi[ks[j]], leaf=l} end end end
+         at=at, lo=-BIG, hi=hi[ks[j]], leaf=l}
 
-let cuts = fn(data, rows, y)
+let cuts = fn(data, rows, y):
   let u, ys = {}, [y(r) for _, r in ipairs(rows)]
-  for _, at in ipairs(data.x) do
+  for _, at in ipairs(data.x):
     let c = data.cols[at]
     let tot, bins, hi = Num(), {}, {}
-    for i, r in ipairs(rows) do
+    for i, r in ipairs(rows):
       let v = r[at]
-      if v ~= "?" then
+      if v ~= "?":
         let k = (c.symp and v) or floor(the.bins*norm(c, v))
         bins[k] = add(bins[k] or Num(), ys[i])
         tot     = add(tot, ys[i])
-        hi[k] = c.symp and v or max(hi[k] or -BIG, v) end end
+        hi[k] = c.symp and v or max(hi[k] or -BIG, v)
     let cut = argmin((c.symp and cutsSyms or cutsNums)(
                     bins, tot, hi, at), fn(z) @z.score end)
-    if cut then u[#u+1] = cut end end
-  @u end
+    if cut: u[#u+1] = cut
+  @u
 
 -- 4. Build a tree ------------------------------------------
-disty = fn(data, row)
+disty = fn(data, row):
   let p, s = the.p, 0
-  for _, at in ipairs(data.y) do
+  for _, at in ipairs(data.y):
     s = s + abs(norm(data.cols[at], row[at])
-                - data.goal[at]) ^ p end
-  @(s / #data.y) ^ (1 / p) end
+                - data.goal[at]) ^ p
+  @(s / #data.y) ^ (1 / p)
 
 let has = fn(v, lo, hi) @v == "?" or (lo <= v and v <= hi) end
 
-let rest = fn(rows, at, lo, hi)
-  @[r for _, r in ipairs(rows) if not has(r[at], lo, hi)] end
+let rest = fn(rows, at, lo, hi):
+  @[r for _, r in ipairs(rows) if not has(r[at], lo, hi)]
 
-grows = fn(data, y, root, d)
+grows = fn(data, y, root, d):
   let d = d or 0
   let u = {}
-  if d < the.depth then
+  if d < the.depth:
     let cs = [c for _, c in ipairs(cuts(data, data.rows, y))
              if c.leaf.n > (#root.rows) ^ 0.33]
-    if #cs > 0 then
+    if #cs > 0:
       sort(cs, fn(a,b) @a.leaf.mu < b.leaf.mu end)
-      for bit, c in ipairs({cs[1], cs[#cs]}) do
+      for bit, c in ipairs({cs[1], cs[#cs]}):
         let no = rest(data.rows, c.at, c.lo, c.hi)
-        if #no > 0 then
+        if #no > 0:
           let child = {data.names}
-          for _, r in ipairs(no) do table.insert(child, r) end
+          for _, r in ipairs(no): table.insert(child, r)
           let bs = grows(Data(child), y, root, d+1)
-          for _, br in ipairs(bs) do
+          for _, br in ipairs(bs):
             u[#u+1] = {bias=tostring(bit-1) .. br.bias,
                        tree={at=c.at, lo=c.lo, hi=c.hi,
                              left=c.leaf,
-                             right=br.tree}} end end end end end
-  if #u == 0 then
+                             right=br.tree}}
+  if #u == 0:
     let ys = [y(r) for _, r in ipairs(data.rows)]
-    u[#u+1] = {bias="", tree=adds(ys)} end
-  @u end
+    u[#u+1] = {bias="", tree=adds(ys)}
+  @u
 
 -- 5. Use a tree --------------------------------------------
-let predict = fn(t, row)
-  while not t.nump do
-    t = has(row[t.at], t.lo, t.hi) and t.left or t.right end
-  @t.mu end
+let predict = fn(t, row):
+  while not t.nump:
+    t = has(row[t.at], t.lo, t.hi) and t.left or t.right
+  @t.mu
 
-let tune = fn(cands, rows, y)
-  let err = fn(t)
+let tune = fn(cands, rows, y):
+  let err = fn(t):
     @sum([abs(y(r) - predict(t, r))
-           for _, r in ipairs(rows)]) / #rows end
-  @argmin(cands, err) end
+           for _, r in ipairs(rows)]) / #rows
+  @argmin(cands, err)
 
-show = fn(data, t)
-  if t.nump then
+show = fn(data, t):
+  if t.nump:
     print(("%-33s leaf  d2h %.2f n=%d"):fmt("", t.mu, t.n))
-    @nil end
+    @nil
   let nm = data.names[t.at]
   let c = ""
-  if t.lo == t.hi then
+  if t.lo == t.hi:
     c = ("%s == %s"):fmt(nm, tostring(t.lo))
-  elif t.lo == -BIG then
+  elif t.lo == -BIG:
     c = ("%s <= %s"):fmt(nm, tostring(qty(t.hi)))
-  else
-    c = ("%s >= %s"):fmt(nm, tostring(qty(t.lo))) end
+  else:
+    c = ("%s >= %s"):fmt(nm, tostring(qty(t.lo)))
   let lf = t.left
   print(("if %-30s then d2h %.2f n=%d"):fmt(
     c, lf.mu, lf.n))
-  show(data, t.right) end
+  show(data, t.right)
 
 -- 6. IO ----------------------------------------------------
-qty = fn(v)
-  if type(v) == "number" then
-    if floor(v) == v then @floor(v) end
-    @tonumber(("%."..the.Round.."f"):fmt(v)) end
-  @v end
+qty = fn(v):
+  if type(v) == "number":
+    if floor(v) == v: @floor(v)
+    @tonumber(("%."..the.Round.."f"):fmt(v))
+  @v
 
 -- 7. Tests/demos -------------------------------------------
-let test_main = fn()
+let test_main = fn():
   let data = Data([row for row in csv(the.file)])
   let y = fn(r) @disty(data, r) end
   let cands = [b.tree for _, b in ipairs(grows(data, y, data))]
-  show(data, tune(cands, data.rows, y)) end
+  show(data, tune(cands, data.rows, y))
 
-let test_trees = fn()
+let test_trees = fn():
   let data = Data([row for row in csv(the.file)])
   let y = fn(r) @disty(data, r) end
   let trees = grows(data, y, data)
-  for i, bt in ipairs(trees) do
+  for i, bt in ipairs(trees):
     let t = bt.tree
     let e = sum([abs(y(r) - predict(t, r))
               for _, r in ipairs(data.rows)]) / #data.rows
     print(("===== tree %2d   bias %-5s   err %.3f ====="):fmt(
       i, bt.bias, e))
     show(data, t)
-    print() end end
+    print()
 
 -- 8. Start-up (skipped when required as a module) -----------
-if arg and arg[0] and arg[0]:gsub(".*/", ""):match("^fft%.lu[ak]$") then
-  for i = 1, #arg - 1 do
-    for k, _ in pairs(the) do
-      if arg[i] == "-" .. k:sub(1,1) then
-        the[k] = of(arg[i+1]) end end end
+if arg and arg[0] and arg[0]:gsub(".*/", ""):match("^fft%.lu[ak]$"):
+  for i = 1, #arg - 1:
+    for k, _ in pairs(the):
+      if arg[i] == "-" .. k:sub(1,1):
+        the[k] = of(arg[i+1])
   randomseed(the.seed)
   let mode = "main"
-  for _, a in ipairs(arg) do
-    if a == "--trees" then mode = "trees" end end
-  (mode == "trees" and test_trees or test_main)() end
+  for _, a in ipairs(arg):
+    if a == "--trees": mode = "trees"
+  (mode == "trees" and test_trees or test_main)()
 
 @{the=the, Sym=Sym, Num=Num, sd=sd, welford=welford, norm=norm,
    merge=merge, Data=Data, add=add, adds=adds, disty=disty,
