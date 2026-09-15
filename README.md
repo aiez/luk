@@ -4,12 +4,11 @@
 ### [https://github.com/aiez/luk](https://github.com/aiez/luk)
 
 `luk` is the **`.luk` language**: Lua plus `fn`, `@` for return,
-`let` locals, `elif`, comprehensions, and optional Python-style
-`:` blocks. Any Lua is (almost) valid luk, and every `.luk` line
-maps 1:1 onto its generated Lua. Two small pure functions do the
-work: `luk.lua` (~40 lines) rewrites the whole source with two
-data tables; `blocks.lua` (~26 lines) turns `:`+indent into
-`then`/`do`/`end`.
+`let` locals, `elif`, and comprehensions. Blocks are Lua's own
+(`then`/`do`/`end`), so any Lua is (almost) valid luk and every
+`.luk` line maps 1:1 onto its generated Lua. One ~40-line
+module, `luk.lua`, does whole-source transpilation; it is a pure
+function, with no IO and no side effects.
 
 ```bash
 git clone https://github.com/aiez/luk && cd luk
@@ -95,47 +94,6 @@ House style parks `end` at the end of the last body line:
       else @0 end end                   else return 0 end end
     print(sign(3))                    print(sign(3))
 
-### Blocks (optional)
-
-Explicit `then`/`do`/`end` always works. A line ending in `:`
-opens a block instead; the indented body under it closes at the
-dedent:
-
-    fn sign(x):                       function sign(x)
-      if (x > 0):                       if (x > 0) then
-        @1                                return 1
-      elif (x < 0):                     elseif (x < 0) then
-        @-1                               return -1
-      else:                             else
-        @0                                return 0 end end
-    print(sign(3))                    print(sign(3))
-
-Headers: `if c:` `elif c:` `else:` `while c:` `for ... :` `do:`
-`fn NAME(...):` and `let NAME = fn(...):`. Parens around a
-condition are style, not required.
-
-`HEADER: BODY` on one line opens and closes on that line, and an
-`if` one-liner chains with `elif`/`else` lines below it:
-
-    if (x < lo): @lo                  if (x < lo) then return lo
-    elif (x > hi): @hi                elseif (x > hi) then return hi end
-    for i = 1, 4: s = s + i           for i = 1, 4 do s = s + i end
-
-Mid-expression, write the `end` yourself; the `:` is optional
-there and stripped if present:
-
-    sort(t, fn(a, b): @a.k < b.k end)
-    sort(t, fn(a, b) @a.k < b.k end)   -- same thing
-
-  - Indent with spaces, consistently; tabs count as one column.
-  - Lines inside unclosed `(`/`{`/`[` are never headers or
-    dedents, so hanging indents are safe.
-  - No `repeat:` -- write plain Lua `repeat ... until c`.
-  - A statement one-liner's colon needs a space after it.
-    One-liners are gated on `if`/`elif`/`else`/`while`/`for`/`do`,
-    so `obj:m()` is never mistaken for one.
-  - Statement one-liners do not nest: `if (x): if (y): z` breaks.
-
 ### Comprehensions (may span lines; no nesting)
 
     [EXPR for V in ITER]              -- list
@@ -170,12 +128,8 @@ there and stripped if present:
     pass through untouched.
   - Indentation is not significant; indent however you like.
   - `.luk` files carry a `ft=lua` modeline and Lua's own syntax
-    covers them; only `fn`, `@`, `let` and comprehensions are
-    foreign. One exception: Lua *treesitter* cannot parse a `:`
-    one-liner -- its error recovery re-pairs the quotes on that
-    line and the rest of the file renders as one string -- so a
-    file using `:` blocks wants regex `syntax on`, not
-    treesitter.
+    covers them: only `fn`, `@`, `let` and comprehensions are
+    foreign, and none of them upsets the parser.
 
 ## PERFORMANCE
 
@@ -194,7 +148,6 @@ Negligible on any real workload.
 ## FILES
 
     luk.lua      .luk -> .lua transpiler (pure fn, no IO)
-    blocks.lua   stage 1: ":" + indent -> then/do/end
     tests.lua    transpiler regression tests (lua tests.lua)
     test_*.luk   lib/stats/fft checks (make tests, or
                  ./luk test_lib.luk [NAME...])
@@ -207,11 +160,11 @@ Negligible on any real workload.
                  pooledSd, topTier (requires "lib")
     fft.luk      example: multi-objective regression tree
     Makefile     rule:  %.lua: %.luk luk.lua
-    sandbox/     luk2.lua: the retired v0.1 transpiler. Same
-                 language as today (":" blocks, one-liners,
-                 comprehensions, ^/let/fun) in 94 code lines,
-                 against 66 for luk.lua + blocks.lua -- kept as
-                 a before/after, not as working code.
+    sandbox/     luk2.lua: the retired v0.1 transpiler, 94 code
+                 lines, with Python-style ":" blocks and indent
+                 sensitivity. Dropped: measured against explicit
+                 then/do/end it saved 3% of source bytes and zero
+                 lines, for 26 lines of parser. Kept as history.
 
 ## SEE ALSO
 

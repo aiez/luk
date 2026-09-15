@@ -118,96 +118,7 @@ CHECK("dict-comprehension", [=[
 let d = {v, k for k, v in {a = 1}}
 @d[1] ]=], "a")
 
--- 5. ":" blocks (blocks.lua) ------------------------------------------
-CHECK("block-if-elif-else", [=[
-fn sign(x):
-  if (x > 0):
-    @1
-  elif (x < 0):
-    @-1
-  else:
-    @0
-@sign(-5)]=], -1)
-
-CHECK("block-while", [=[
-fn count(k):
-  let i = 0
-  while (i < k):
-    i = i + 1
-  @i
-@count(7)]=], 7)
-
-CHECK("block-for", [=[
-fn total(t):
-  let s = 0
-  for _, x in ipairs(t):
-    s = s + x
-  @s
-@total({1, 2, 3})]=], 6)
-
-CHECK("block-assigned-fn", [=[
-let mul = fn(a):
-  let b = a * 2
-  @b
-@mul(7)]=], 14)
-
-CHECK("block-nested-dedent", [=[
-fn f(n):
-  if (n > 0):
-    if (n > 1):
-      @2
-    @1
-  @0
-@f(2) * 100 + f(1) * 10 + f(0)]=], 210)
-
-CHECK("oneliner-chain", [=[
-fn clamp(x, lo, hi):
-  if (x < lo): @lo
-  elif (x > hi): @hi
-  @x
-@clamp(5, 1, 4) + clamp(0, 1, 4) + clamp(2, 1, 4)]=], 7)
-
-CHECK("oneliner-for", [=[
-let s = 0
-for i = 1, 4: s = s + i
-@s]=], 10)
-
-CHECK("inline-fn-colon", [=[
-let t = {3, 1, 2}
-table.sort(t, fn(a, b): @a > b end)
-@t[1] ]=], 3)
-
-CHECK("header-with-comment", [=[
-fn f(x):     -- doubles
-  @x * 2     -- here
-@f(21)]=], 42)
-
-CHECK("explicit-end-still-works", [=[
-let add = fn(a, b) if a then @a + b end @b end
-@add(2, 3)]=], 5)
-
-CHECK("method-colon-untouched-2", [=[
-let s = "hi"
-@s:upper()]=], "HI")
-
-CHECK("blank-lines-in-block", [=[
-fn f(x):
-
-  let y = x * 2
-
-  @y
-
-@f(21)]=], 42)
-
-CHECK("blank-line-in-chain", [=[
-fn c(x):
-  if (x < 1): @1
-
-  elif (x > 9): @9
-  @x
-@c(5)]=], 5)
-
--- 6. comments, strings, misc sigils ------------------------------------
+-- 5. comments, strings, misc sigils ------------------------------------
 CHECK("trailing-comments", [=[
 fn f()  -- make f
   @1    -- one
@@ -234,7 +145,7 @@ x = x + 1
 if x < 3 then goto top end
 @x]=], 3) end
 
--- 7. error line numbers ------------------------------------------------
+-- 6. error line numbers ------------------------------------------------
 CHECKERR("errline-flat", [=[
 let x = 1
 
@@ -245,15 +156,6 @@ fn f()
   if 1 > 0 then
     error("bam") end end
 f()]=], 3)
-
--- 8. CRLF: "[^\r\n]*\r?\n" in blocks.lua, else ":\r" is not a header
-do
-  n = n + 1
-  local lua = transpile("fn f(x):\r\n  @x * 2\r\n@f(21)\r\n")
-  local f = load(lua)
-  local ok, got = false, nil
-  if f then ok, got = pcall(f) end
-  if not ok or got ~= 42 then report("crlf", lua, got, 42) end end
 
 print(("%d/%d pass"):format(n - fails, n))
 os.exit(fails == 0 and 0 or 1)

@@ -8,64 +8,64 @@ let L = require("lib")
 let sort, keys, keysort, slice = L.sort, L.keys, L.keysort, L.slice
 let abs, max, floor = math.abs, math.max, math.floor
 
-let welfords = fn(xs):         -- batch mu, sd of a list (Welford)
+let welfords = fn(xs)          -- batch mu, sd of a list (Welford)
   let n, mu, m2 = 0, 0, 0
-  for _, v in ipairs(xs):
+  for _, v in ipairs(xs) do
     n = n + 1
     let d = v - mu
     mu = mu + d / n
-    m2 = m2 + d * (v - mu)
-  @mu, (n < 2 and 0 or (m2 / (n - 1)) ^ 0.5)
+    m2 = m2 + d * (v - mu) end
+  @mu, (n < 2 and 0 or (m2 / (n - 1)) ^ 0.5) end
 
-let bisect = fn(t, x, strict): -- count t[i]<=x (<x if strict); t sorted
+let bisect = fn(t, x, strict)  -- count t[i]<=x (<x if strict); t sorted
   let lo, hi = 1, #t
-  while lo <= hi:
+  while lo <= hi do
     let mid = floor((lo + hi) / 2)
-    if strict and t[mid] < x or (not strict) and t[mid] <= x:
+    if strict and t[mid] < x or (not strict) and t[mid] <= x then
       lo = mid + 1
-    else:
-      hi = mid - 1
-  @lo - 1
+    else
+      hi = mid - 1 end end
+  @lo - 1 end
 
-let pooledSd = fn(xs, ys):     -- pooled stdev of two raw samples
+let pooledSd = fn(xs, ys)      -- pooled stdev of two raw samples
   let nx, sx = #xs, (select(2, welfords(xs)))
   let ny, sy = #ys, (select(2, welfords(ys)))
-  @(((nx-1)*sx*sx + (ny-1)*sy*sy) / (nx+ny-2)) ^ 0.5
+  @(((nx-1)*sx*sx + (ny-1)*sy*sy) / (nx+ny-2)) ^ 0.5 end
 
-let cliffsDelta = fn(xs, ys):  -- effect size; ys pre-sorted
+let cliffsDelta = fn(xs, ys)   -- effect size; ys pre-sorted
   let n, p, ngt, nlt = #xs, #ys, 0, 0
-  for _, v in ipairs(xs):
+  for _, v in ipairs(xs) do
     ngt = ngt + bisect(ys, v, true)
-    nlt = nlt + (p - bisect(ys, v))
-  @abs(ngt - nlt) / (n * p)
+    nlt = nlt + (p - bisect(ys, v)) end
+  @abs(ngt - nlt) / (n * p) end
 
-let ks = fn(xs, ys):           -- Kolmogorov-Smirnov gap; pre-sorted
+let ks = fn(xs, ys)            -- Kolmogorov-Smirnov gap; pre-sorted
   let n, p, d = #xs, #ys, 0
   let gap = fn(v) @abs(bisect(xs, v)/n - bisect(ys, v)/p) end
-  for _, v in ipairs(xs): d = max(d, gap(v))
-  for _, v in ipairs(ys): d = max(d, gap(v))
-  @d
+  for _, v in ipairs(xs) do d = max(d, gap(v)) end
+  for _, v in ipairs(ys) do d = max(d, gap(v)) end
+  @d end
 
-let sames = fn(xs, ys, eps, cliffs, ksconf):
+let sames = fn(xs, ys, eps, cliffs, ksconf)
   let eps, cliffs, ksconf = eps or 0, cliffs or 0.195, ksconf or 1.36
   let a = sort(slice(xs))
   let b = sort(slice(ys))
   let n, p = #a, #b
-  if abs(a[floor(n/2)+1] - b[floor(p/2)+1]) <= eps: @true
-  if cliffsDelta(a, b) > cliffs: @false
-  @ks(a, b) <= ksconf * ((n + p) / (n * p)) ^ 0.5
+  if abs(a[floor(n/2)+1] - b[floor(p/2)+1]) <= eps then @true end
+  if cliffsDelta(a, b) > cliffs then @false end
+  @ks(a, b) <= ksconf * ((n + p) / (n * p)) ^ 0.5 end
 
-let topTier = fn(dict, cmp, eps, cliffs, ksconf):
+let topTier = fn(dict, cmp, eps, cliffs, ksconf)
   let out = {}
   let names = keysort(keys(dict), fn(k) @(welfords(dict[k])) end, cmp)
   let best = dict[names[1]]
   out[names[1]] = (welfords(best))
-  for i = 2, #names:
+  for i = 2, #names do
     let cand = dict[names[i]]
     let th = (eps or 0) * pooledSd(best, cand)
-    if not sames(best, cand, th, cliffs, ksconf): break
-    out[names[i]] = (welfords(cand))
-  @out
+    if not sames(best, cand, th, cliffs, ksconf) then break end
+    out[names[i]] = (welfords(cand)) end
+  @out end
 
 @{welfords=welfords, bisect=bisect, pooledSd=pooledSd,
    cliffsDelta=cliffsDelta, ks=ks, sames=sames, topTier=topTier}

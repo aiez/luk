@@ -15,22 +15,22 @@ let o, deepCopy
 -- 1. rand: portable Park-Miller PRNG; seeded runs match anywhere
 let Seed = 1
 
-let srand = fn(n):             -- set seed (any integer)
+let srand = fn(n)              -- set seed (any integer)
   Seed = (n or 1) % 2147483647
-  if Seed == 0: Seed = 1
+  if Seed == 0 then Seed = 1 end end
 
-let rand = fn(n):              -- rand() -> [0,1); rand(n) -> 1..n
+let rand = fn(n)               -- rand() -> [0,1); rand(n) -> 1..n
   Seed = (16807 * Seed) % 2147483647
   let r = Seed / 2147483647
-  @n and floor(r * n) + 1 or r
+  @n and floor(r * n) + 1 or r end
 
 let any = fn(t) @t[rand(#t)] end
 
-let shuffle = fn(t):           -- Fisher-Yates, in place; returns t
-  for i = #t, 2, -1:
+let shuffle = fn(t)            -- Fisher-Yates, in place; returns t
+  for i = #t, 2, -1 do
     let j = rand(i)
-    t[i], t[j] = t[j], t[i]
-  @t
+    t[i], t[j] = t[j], t[i] end
+  @t end
 
 -- 2. lists
 let push = fn(t, x) t[#t+1] = x; @x end
@@ -39,117 +39,117 @@ let sort = fn(t, f) table.sort(t, f); @t end
 
 let keys = fn(t) @[k for k, _ in t] end
 
-let order = fn(t):             -- sorted-key iteration (lists: ipairs)
-  if #t > 0: @ipairs(t)
+let order = fn(t)              -- sorted-key iteration (lists: ipairs)
+  if #t > 0 then @ipairs(t) end
   let u = sort(keys(t))
   let j = 0
-  @fn():
+  @fn()
     j = j + 1
-    if u[j]: @u[j], t[u[j]]
+    if u[j] then @u[j], t[u[j]] end end end
 
 let nth = fn(n) @fn(t) @t[n] end end
 let lt = fn(n) @fn(a, b) @a[n] < b[n] end end
 let gt = fn(n) @fn(a, b) @a[n] > b[n] end end
 
-let keysort = fn(t, f, cmp):   -- sort by f-derived key (DSU)
+let keysort = fn(t, f, cmp)    -- sort by f-derived key (DSU)
   let d = sort([{f(x), x} for x in t], (cmp or lt)(1))
-  @[pair[2] for pair in d]
+  @[pair[2] for pair in d] end
 
-let slice = fn(t, lo, hi):     -- t[lo..hi]; negatives from the end
+let slice = fn(t, lo, hi)      -- t[lo..hi]; negatives from the end
   let n = #t
   let lo = lo or 1
   let hi = hi or n
-  if lo < 0: lo = n + 1 + lo
-  if hi < 0: hi = n + 1 + hi
-  if hi > n: hi = n
+  if lo < 0 then lo = n + 1 + lo end
+  if hi < 0 then hi = n + 1 + hi end
+  if hi > n then hi = n end
   let u = {}
-  for i = lo, hi: u[#u+1] = t[i]
-  @u
+  for i = lo, hi do u[#u+1] = t[i] end
+  @u end
 
 -- 3. objects
 let new = fn(mt, t) mt.__index = mt; @setmetatable(t, mt) end
 
-deepCopy = fn(t, seen):     -- keeps metatables, survives cycles
-  if type(t) ~= "table": @t
-  if seen and seen[t]: @seen[t]
+deepCopy = fn(t, seen)      -- keeps metatables, survives cycles
+  if type(t) ~= "table" then @t end
+  if seen and seen[t] then @seen[t] end
   let seen = seen or {}
   let u = {}
   seen[t] = u
-  for k, v in pairs(t): u[deepCopy(k, seen)] = deepCopy(v, seen)
-  @setmetatable(u, getmetatable(t))
+  for k, v in pairs(t) do u[deepCopy(k, seen)] = deepCopy(v, seen) end
+  @setmetatable(u, getmetatable(t)) end
 
 -- 4. strings
 let of = fn(z) @z=="True" or z~="False" and (tonumber(z) or z) end
 
-o = fn(x):                  -- pretty print; sorted dict keys
-  if type(x) == "number":
-    if floor(x) == x: @floor(x)
-    @("%.2f"):fmt(x)
-  if type(x) ~= "table": @tostring(x)
+o = fn(x)                   -- pretty print; sorted dict keys
+  if type(x) == "number" then
+    if floor(x) == x then @floor(x) end
+    @("%.2f"):fmt(x) end
+  if type(x) ~= "table" then @tostring(x) end
   let u = #x > 0 and [o(v) for v in x]
        or sort([k .. "=" .. o(v) for k, v in x])
-  @"{" .. table.concat(u, ", ") .. "}"
+  @"{" .. table.concat(u, ", ") .. "}" end
 
 let o2 = fn(s, x) print(s .. " =", o(x)); @x end
 
 -- 5. maths
-let sum = fn(xs):
+let sum = fn(xs)
   let s = 0
-  for _, x in ipairs(xs): s = s + x
-  @s
+  for _, x in ipairs(xs) do s = s + x end
+  @s end
 
-let iter = fn(t):              -- iterate a list's values, or pass
-  if type(t) == "function": @t      -- a generator fn through
+let iter = fn(t)               -- iterate a list's values, or pass
+  if type(t) == "function" then @t end      -- a generator fn through
   let j = 0
-  @fn():
+  @fn()
     j = j + 1
-    @t[j]
+    @t[j] end end
 
-let argmin = fn(xs, key):      -- min-by-key item; xs list or iterator
+let argmin = fn(xs, key)       -- min-by-key item; xs list or iterator
   let best, bv = nil, nil
-  for x in iter(xs):
+  for x in iter(xs) do
     let v = key(x)
-    if bv == nil or v < bv: best, bv = x, v
-  @best
+    if bv == nil or v < bv then best, bv = x, v end end
+  @best end
 
 -- 6. files
-let path = fn(s):              -- expand leading $DOOT and ~
+let path = fn(s)               -- expand leading $DOOT and ~
   let home = os.getenv("HOME") or "~"
   s = s:gsub("^%$DOOT", os.getenv("DOOT") or "..")
-  @(s:gsub("^~", home))
+  @(s:gsub("^~", home)) end
 
-let csv = fn(file):            -- iterate rows; cells coerced via of()
+let csv = fn(file)             -- iterate rows; cells coerced via of()
   let f = assert(io.open(path(file)), "cannot open: " .. file)
-  @fn():
-    while true:
+  @fn()
+    while true do
       let s = f:read()
-      if s == nil: f:close(); @nil
+      if s == nil then f:close(); @nil end
       s = s:gsub("^%s+", ""):gsub("%s+$", "")
-      if #s > 0 and s:sub(1,1) ~= "#":
-        @[of(x) for x in s:gmatch("[^,]+")]
+      if #s > 0 and s:sub(1,1) ~= "#" then
+        @[of(x) for x in s:gmatch("[^,]+")] end end end end
 
 -- 7. tests
-let chk = fn(...):             -- cases {tag, got, want[, tol]}; print
-  for _, c in ipairs({...}):    -- each; false,failTag on mismatch
+let chk = fn(...)              -- cases {tag, got, want[, tol]}; print
+  for _, c in ipairs({...}) do    -- each; false,failTag on mismatch
     o2(c[1], c[2])
-    if not (c[4] and abs(c[2] - c[3]) <= c[4] or c[2] == c[3]):
-      @false, c[1]
-  @true
+    if not (c[4] and abs(c[2] - c[3]) <= c[4] or c[2] == c[3]) then
+      @false, c[1] end end
+  @true end
 
-let test = fn(egs):            -- run egs (all, or names in arg);
+let test = fn(egs)             -- run egs (all, or names in arg);
   let fails = 0                -- seeds reset per eg; returns #fails
   let names = #arg > 0 and arg or sort(keys(egs))
-  for _, k in ipairs(names):
-    if egs[k]:
+  for _, k in ipairs(names) do
+    if egs[k] then
       print("-- " .. k)
       math.randomseed(1)
       srand(1)
       let ok, err = pcall(egs[k])
-      if not ok or err == false:
+      if not ok or err == false then
         fails = fails + 1
-        print("FAIL", k, err or "")
+        print("FAIL", k, err or "") end end end
   print(fails == 0 and "all pass" or fails .. " failed")
-  @fails
+  @fails end
 
 @{abs=abs, max=max, min=min, sqrt=sqrt, exp=exp, floor=floor,
    srand=srand, rand=rand, any=any, shuffle=shuffle,
