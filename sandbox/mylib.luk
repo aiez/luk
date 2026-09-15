@@ -1,5 +1,0 @@
--- mylib.luk : hook test module
-let lib = {}
-lib.tri = fn(n) ^n * (n + 1) / 2 end
-lib.evens = fn(t) ^[x for x in t if x % 2 == 0] end
-^lib

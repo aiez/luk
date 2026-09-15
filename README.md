@@ -206,8 +206,11 @@ Negligible on any real workload.
                  pooledSd, topTier (requires "lib")
     fft.luk      example: multi-objective regression tree
     Makefile     rule:  %.lua: %.luk luk.lua
-    sandbox/     retired v0.1 indentation-based dialect (luk2)
-                 (v0.3's ":" block syntax is retired too)
+    sandbox/     luk2.lua: the retired v0.1 transpiler. Same
+                 language as today (":" blocks, one-liners,
+                 comprehensions, ^/let/fun) in 94 code lines,
+                 against 66 for luk.lua + blocks.lua -- kept as
+                 a before/after, not as working code.
 
 ## SEE ALSO
 
