@@ -26,6 +26,6 @@ exclude:
   - Makefile
   - Gemfile
   - Gemfile.lock
-  - banner.txt
+  - etc/banner.txt
   - todo.md
   - vendor

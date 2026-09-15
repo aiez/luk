@@ -11,12 +11,6 @@ use `--pretty-print=lua.ssh` (cwd file) directly; shared
 `pdf_recipe` define. Konfig's own SSH scheme still needs Make >= 4
 for other repos.
 
-## ,luk.md doc audit
-
-- [x] tiny.cc/fun -> https://github.com/aiez/luk URLs
-- [x] "fun -" title -> "luk -"
-- [x] verify SYNOPSIS code blocks all use `luk` (not `funny`)
-
 ## a2ps rule cleanup
 
 - Konfig's `~/tmp/%.pdf` rule needs `EXT=luk` + `LANG=lua` AND a

@@ -51,7 +51,7 @@ keywords in Keyword_strong are
 end keywords
 
 keywords in Label_strong are
-    "^" function
+    "@"
 end keywords
 
 keywords in Comment are
