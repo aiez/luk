@@ -6,13 +6,14 @@ source = {
 }
 
 description = {
-  summary  = "tiny .luk -> Lua transpiler (~60-line module) + cli + battery",
+  summary  = "tiny .luk -> Lua transpiler (~66 lines, 2 files) + cli + battery",
   detailed = [[
     luk is the .luk language: Lua plus `fn`, `@` for return,
-    `let` locals, `elif`, and comprehensions. Blocks are
-    Lua's own (then/do/end), so any Lua is (almost) valid luk
-    and every .luk line maps 1:1 onto its generated Lua, which
-    keeps the source's line numbers exactly.
+    `let` locals, `elif`, comprehensions, and optional
+    Python-style ":" blocks. Explicit then/do/end also works,
+    so any Lua is (almost) valid luk, and every .luk line maps
+    1:1 onto its generated Lua, which keeps the source's line
+    numbers exactly.
 
     The module is a pure function, no IO and no side effects:
       local luk = require("luk")
@@ -39,7 +40,7 @@ dependencies = { "lua >= 5.3" }
 
 build = {
   type    = "builtin",
-  modules = { luk = "luk.lua" },
+  modules = { luk = "luk.lua", blocks = "blocks.lua" },
   install = {
     bin  = { luk = "luk" },
     lua  = { lib = "lib.luk", stats = "stats.luk", fft = "fft.luk" },

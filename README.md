@@ -4,11 +4,12 @@
 ### [https://github.com/aiez/luk](https://github.com/aiez/luk)
 
 `luk` is the **`.luk` language**: Lua plus `fn`, `@` for return,
-`let` locals, `elif`, and comprehensions. Blocks are Lua's
-own (`then`/`do`/`end`), so any Lua is (almost) valid luk and
-every `.luk` line maps 1:1 onto its generated Lua. One ~60-line
-module, `luk.lua`, does whole-source transpilation; it is a pure
-function, with no IO and no side effects.
+`let` locals, `elif`, comprehensions, and optional Python-style
+`:` blocks. Any Lua is (almost) valid luk, and every `.luk` line
+maps 1:1 onto its generated Lua. Two small pure functions do the
+work: `luk.lua` (~40 lines) rewrites the whole source with two
+data tables; `blocks.lua` (~26 lines) turns `:`+indent into
+`then`/`do`/`end`.
 
 ```bash
 git clone https://github.com/aiez/luk && cd luk
@@ -93,6 +94,47 @@ House style parks `end` at the end of the last body line:
       else @0 end end                   else return 0 end end
     print(sign(3))                    print(sign(3))
 
+### Blocks (optional)
+
+Explicit `then`/`do`/`end` always works. A line ending in `:`
+opens a block instead; the indented body under it closes at the
+dedent:
+
+    fn sign(x):                       function sign(x)
+      if (x > 0):                       if (x > 0) then
+        @1                                return 1
+      elif (x < 0):                     elseif (x < 0) then
+        @-1                               return -1
+      else:                             else
+        @0                                return 0 end end
+    print(sign(3))                    print(sign(3))
+
+Headers: `if c:` `elif c:` `else:` `while c:` `for ... :` `do:`
+`fn NAME(...):` and `let NAME = fn(...):`. Parens around a
+condition are style, not required.
+
+`HEADER: BODY` on one line opens and closes on that line, and an
+`if` one-liner chains with `elif`/`else` lines below it:
+
+    if (x < lo): @lo                  if (x < lo) then return lo
+    elif (x > hi): @hi                elseif (x > hi) then return hi end
+    for i = 1, 4: s = s + i           for i = 1, 4 do s = s + i end
+
+Mid-expression, write the `end` yourself; the `:` is optional
+there and stripped if present:
+
+    sort(t, fn(a, b): @a.k < b.k end)
+    sort(t, fn(a, b) @a.k < b.k end)   -- same thing
+
+  - Indent with spaces, consistently; tabs count as one column.
+  - Lines inside unclosed `(`/`{`/`[` are never headers or
+    dedents, so hanging indents are safe.
+  - No `repeat:` -- write plain Lua `repeat ... until c`.
+  - A statement one-liner's colon needs a space after it.
+    One-liners are gated on `if`/`elif`/`else`/`while`/`for`/`do`,
+    so `obj:m()` is never mistaken for one.
+  - Statement one-liners do not nest: `if (x): if (y): z` breaks.
+
 ### Comprehensions (may span lines; no nesting)
 
     [EXPR for V in ITER]              -- list
@@ -139,6 +181,7 @@ Negligible on any real workload.
 ## FILES
 
     luk.lua      .luk -> .lua transpiler (pure fn, no IO)
+    blocks.lua   stage 1: ":" + indent -> then/do/end
     tests.lua    transpiler regression tests (lua tests.lua)
     test_*.luk   lib/stats/fft checks (make tests, or
                  ./luk test_lib.luk [NAME...])

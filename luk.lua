@@ -25,7 +25,9 @@ local function body(n)  -- "E for V in I [if C]" -> E,V,I,C?
   if not e then e,v,i = n:match"^(.-) for (.-) in (.+)$" end
   return e,v,i,c end
 
--- The language is two data tables and a nine-line engine.
+local blocks = require"blocks"   -- ":" blocks; see blocks.lua
+
+-- The language is two data tables and a ten-line engine.
 -- H: literals hidden before any rewrite (long comments, long
 -- strings, "", '', -- ...) so no sigil below looks inside them.
 local H = {"(%-%-%[(=*)%[.-%]%2%])", "(%[(=*)%[.-%]%2%])",
@@ -33,6 +35,7 @@ local H = {"(%-%-%[(=*)%[.-%]%2%])", "(%[(=*)%[.-%]%2%])",
 
 -- R: every rewrite luk does, in order.
 local R = {
+  {"(%f[%w_]fn%f[%W][ \t]*%b())[ \t]*:", "%1"},  -- inline "fn(a,b):"
   {"%f[%w_]elif%f[%W]",      "elseif"},
   {"%f[%w_]fn%f[%W]",        "function"},
   {"@[ \t]*",                "return "},
@@ -52,6 +55,7 @@ return function(src)
   local s = {}
   local function hide(m) s[#s+1]=m; return "\3"..#s.."\3" end
   for _,p in ipairs(H) do src = src:gsub(p, hide) end
+  src = blocks(src)          -- ":" + indent -> then/do/end (stage 1)
   for _,p in ipairs(R) do src = src:gsub(p[1],p[2]) end
   while src:find"\3" do      -- unhide; markers nest ("s" inside --)
     src = src:gsub("\3(%d+)\3", function(n) return s[tonumber(n)] end) end
