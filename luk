@@ -3,9 +3,24 @@
 -- usage: luk FILE.luk [args...]   transpile, run (args passed through)
 --        luk -d FILE.luk          dump generated Lua to stdout
 -- Installs the require() hook, so scripts can require .luk modules.
+-- Runs on Lua 5.1+, luajit and 5.3+ (5.1 lacks load(str)/searchpath).
 
 package.path = (arg[0]:gsub("[^/]*$", "")) .. "?.lua;" .. package.path
 local transpile = require"luk"
+
+local load = loadstring or load          -- 5.1/luajit take a string
+local searchpath = package.searchpath or function(name, path)   -- 5.1
+  for tmpl in path:gmatch"[^;]+" do
+    local file = tmpl:gsub("%?", (name:gsub("%.", "/")))
+    local h = io.open(file)
+    if h then h:close(); return file end end end
+
+table.insert(package.searchers or package.loaders, 2, function(name)
+  local path = searchpath(name, (package.path:gsub("%.lua",".luk")))
+  if not path then return end
+  local g = assert(io.open(path))
+  local src = g:read"*a"; g:close()
+  return assert(load(transpile(src), "@"..path)), path end)
 
 local i = arg[1] == "-d" and 2 or 1
 local file = arg[i]
@@ -18,4 +33,4 @@ if i == 2 then io.write(lua); os.exit(0) end
 local a = {[0] = file}
 for j = 2, #arg do a[#a+1] = arg[j] end
 arg = a
-assert(load(lua, "@"..file))(table.unpack(a))
+assert(load(lua, "@"..file))((table.unpack or unpack)(a))

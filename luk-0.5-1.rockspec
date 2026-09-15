@@ -1,23 +1,24 @@
 package = "luk"
-version = "0.3-2"
+version = "0.5-1"
 
 source = {
   url = "git+https://github.com/aiez/luk",
 }
 
 description = {
-  summary  = "tiny .luk -> Lua transpiler (~120-line module) + cli + battery",
+  summary  = "tiny .luk -> Lua transpiler (~60-line module) + cli + battery",
   detailed = [[
-    luk is the .luk language: Lua plus Python-style indented
-    blocks ("if x:" ... dedent closes it), `fn`, `^` for return,
-    `let` locals, `!=`, `elif`, and comprehensions. Explicit
-    then/do/else/end still works, so any Lua is (almost)
-    valid luk. Generated Lua keeps the source's line numbers.
+    luk is the .luk language: Lua plus `fn`, `@` for return,
+    `let` locals, `elif`, and comprehensions. Blocks are Lua's
+    own (then/do/end), so any Lua is (almost) valid luk, and
+    every .luk line maps 1:1 onto its generated Lua, which
+    keeps the source's line numbers exactly.
 
-    The module returns a single function and installs a
-    require() hook for .luk modules:
+    The module is a pure function, no IO and no side effects:
       local luk = require("luk")
       local lua_src = luk(luk_src)
+    The bundled "luk" cli adds a require() hook, so .luk files
+    can require each other.
 
     Ships with:
       luk        cli: transpile + run (luk FILE.luk [args...];
@@ -34,7 +35,7 @@ description = {
   maintainer = "Tim Menzies <timm@ieee.org>",
 }
 
-dependencies = { "lua >= 5.3" }
+dependencies = { "lua >= 5.1" }
 
 build = {
   type    = "builtin",
@@ -42,7 +43,7 @@ build = {
   install = {
     bin  = { luk = "luk" },
     lua  = { lib = "lib.luk", stats = "stats.luk", fft = "fft.luk" },
-    conf = { "README.md", "luk.vim", "tests.lua",
+    conf = { "README.md", "tests.lua",
              "test_lib.luk", "test_stats.luk", "test_fft.luk" },
   },
 }
