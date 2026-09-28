@@ -1,4 +1,4 @@
-# generated from the matching .luk by:  make NAME.lua
+# generated from the matching .luc by:  make NAME.lua
 fft.lua
 lib.lua
 stats.lua

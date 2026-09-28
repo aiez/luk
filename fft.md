@@ -4,12 +4,12 @@
 
 Smallest useful AI/XAI optimization tool. Builds a tiny regression
 tree from CSV via greedy min-variance cuts on incremental
-Welford μ/σ stats. Written in `.luk` (see [,luk.md](,luk.md)
-for the language).
+Welford mu/sd stats. Written in `.luc` (see
+[README.md](README.md) for the language).
 
 ```bash
-git clone https://github.com/aiez/optimiz && git clone https://github.com/aiez/luk
-cd luk && ./luk fft.luk -f ../optimiz/auto93.csv
+git clone https://github.com/aiez/optimiz && git clone https://github.com/aiez/luc
+cd luc && ./luc fft.luc -f ../optimiz/auto93.csv
 ```
 
 ## NAME
@@ -18,7 +18,7 @@ cd luk && ./luk fft.luk -f ../optimiz/auto93.csv
 
 ## SYNOPSIS
 
-    ./luk fft.luk [-flag VAL]... [--TEST]   # transpile + run
+    ./luc fft.luc [-flag VAL]... [--trees]  # transpile + run
     make fft.lua lib.lua                    # transpile only
 
 ## OPTIONS
@@ -28,9 +28,10 @@ cd luk && ./luk fft.luk -f ../optimiz/auto93.csv
     -s seed     random seed                  (1234567891)
     -p p        distance exponent            (2)
     -R Round    display decimals             (2)
-    -f file     data file                    (../optimiz/auto93.csv)
+    -f file     data file           ($DOOT/optimiz/auto93.csv)
 
 CLI overrides match by first letter of each key in `the` table.
+`$DOOT` is the dir holding the sibling repos; unset means `..`.
 
 ## DATA
 
@@ -73,7 +74,7 @@ CLI overrides match by first letter of each key in `the` table.
     Num  = {nump=true, n, mu, m2}          -- Welford running stats
     Data = {names, x, y, goal, cols, rows} -- no metatable
 
-    Helpers in lib.luk:
+    Helpers in lib.luc:
       argmin, sum, sort
       of (string -> number/bool/string)
       csv (file -> list of rows)
@@ -86,7 +87,7 @@ CLI overrides match by first letter of each key in `the` table.
 
 ## SEE ALSO
 
-    ,luk.md                .luk language reference
+    README.md              .luc language reference
     https://github.com/aiez/fft       Python sibling
     https://github.com/aiez/optimiz   example CSVs
 

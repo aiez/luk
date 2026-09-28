@@ -1,5 +1,5 @@
--- luk2.lua : RETIRED indentation-based ".luk" -> Lua transpiler.
--- (was luk.lua v0.1; replaced by the end-syntax luk.lua upstairs)
+-- luc2.lua : RETIRED indentation-based ".luc" -> Lua transpiler.
+-- (was luc.lua v0.1; replaced by the end-syntax luc.lua upstairs)
 -- Returns transpile fn.
 -- fun=function  ^=return  let NAME=V  ->  local NAME=V
 -- if (c): elseif (c): else: for X in Y: while c: fun(a):

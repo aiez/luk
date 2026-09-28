@@ -1,23 +1,23 @@
 -- vim: ft=lua ts=2 sw=2 sts=2 et :
--- test_stats.luk: checks for stats.luk.
--- usage: ./luk test_stats.luk [NAME...]   (no args = run all)
-let L = require("lib")
-let S = require("stats")
-let chk, test = L.chk, L.test
+-- test_stats.luc: checks for stats.luc.
+-- usage: ./luc test_stats.luc [NAME...]   (no args = run all)
+$L = require("lib")
+$S = require("stats")
+$chk, test = L.chk, L.test
 
-let mk = fn(off)               -- 50 rands, shifted; srand reset per eg
-  let u = {}
+fn mk(off)                  -- 50 rands, shifted; srand reset per eg
+  $u = {}
   for _ = 1, 50 do u[#u+1] = L.rand() + off end
   @u end
 
-let eg = {}
+$eg = {}
 
 eg["welfords"] = fn()
-  let mu, sd = S.welfords({1, 2, 3, 4, 5})
+  $mu, sd = S.welfords({1, 2, 3, 4, 5})
   @chk({"mu", mu, 3}, {"sd", sd, 1.5811, 1e-3}) end
 
 eg["bisect"] = fn()
-  let t = {1, 2, 2, 3, 5, 8}
+  $t = {1, 2, 2, 3, 5, 8}
   @chk({"le", S.bisect(t, 2), 3},
         {"lt", S.bisect(t, 2, true), 1},
         {"below", S.bisect(t, 0), 0},
@@ -30,13 +30,13 @@ eg["effects"] = fn()
          S.pooledSd({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}), 1.5811, 1e-3}) end
 
 eg["sames"] = fn()
-  let a, b, c = mk(0), mk(0), mk(5)
+  $a, b, c = mk(0), mk(0), mk(5)
   @chk({"same", S.sames(a, b, 0.35 * S.pooledSd(a, b)), true},
         {"diff", S.sames(a, c, 0.35 * S.pooledSd(a, c)), false}) end
 
 eg["topTier"] = fn()
-  let a, b, c = mk(0), mk(0), mk(5)
-  let tier = S.topTier({a = a, b = b, c = c}, nil, 0.35)
+  $a, b, c = mk(0), mk(0), mk(5)
+  $tier = S.topTier({a = a, b = b, c = c}, nil, 0.35)
   @chk({"has a", tier.a ~= nil, true},
         {"has b", tier.b ~= nil, true},
         {"no c", tier.c, nil}) end

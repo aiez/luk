@@ -1,6 +1,6 @@
 # GitHub Pages via .github/workflows/pages.yml (Jekyll 4 + just-the-docs).
 # README.md is the homepage; sub-notes live in docs/ (if any).
-title: luk
+title: luc
 description: "Tiny transpiler for Lua"
 theme: just-the-docs
 plugins:
@@ -11,7 +11,7 @@ plugins:
   - jekyll-titles-from-headings
 
 aux_links:
-  GitHub: https://github.com/aiez/luk
+  GitHub: https://github.com/aiez/luc
 
 # front matter injected here so md files stay clean on github.com;
 # render_with_liquid off for our pages only (code `{{...}}` literals

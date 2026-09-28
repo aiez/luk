@@ -1,5 +1,5 @@
 -- vim: filetype=lua ts=2 sw=2 sts=2 et :
--- fft.luk: fast-frugal multi-objective tree.
+-- fft.luc: fast-frugal multi-objective tree.
 -- (c) 2026, Tim Menzies <timm@ieee.org>, MIT license
 --
 -- Options:
@@ -10,64 +10,64 @@
 --   -R Round    Round=2
 --   -f file     file=../optimiz/auto93.csv
 
-let BIG = 1E32
-let L = require("lib")
-let abs,argmin,of,csv,sort = L.abs,L.argmin,L.of,L.csv,L.sort
-let floor,sum = L.floor, L.sum
-let max, min, sqrt, exp = L.max, L.min, L.sqrt, L.exp
+$BIG = 1E32
+$L = require("lib")
+$abs,argmin,of,csv,sort = L.abs,L.argmin,L.of,L.csv,L.sort
+$floor,sum = L.floor, L.sum
+$max, min, sqrt, exp = L.max, L.min, L.sqrt, L.exp
 
-let randomseed = math.randomseed
+$randomseed = math.randomseed
 
-let the = {seed=1234567891, p=2, bins=7, depth=4, Round=2,
+$the = {seed=1234567891, p=2, bins=7, depth=4, Round=2,
         file=(os.getenv("DOOT") or "..")..
              "/optimiz/auto93.csv"}
 
 -- forward decls (so closures can reference)
-let add, adds, disty, qty, grows, show
+$add, qty
 
 -- 1. Columns ------------------------------------------------
-let Sym = fn() @{symp=true, has={}} end
-let Num = fn(n,mu,m2) @{nump=true,n=n or 0,mu=mu or 0,m2=m2 or 0} end
+fn Sym() @{symp=true, has={}} end
+fn Num(n,mu,m2) @{nump=true,n=n or 0,mu=mu or 0,m2=m2 or 0} end
 
-let sd = fn(num)
+fn sd(num)
   if num.n < 2 then @0 end
   @sqrt(max(0, num.m2) / (num.n - 1)) end
 
-let welford = fn(num, v, w)
-  let n = num.n + w
+fn welford(num, v, w)
+  $n = num.n + w
   if n <= 0 then @Num() end
-  let d = v - num.mu
-  let mu = num.mu + w * d / n
+  $d = v - num.mu
+  $mu = num.mu + w * d / n
   @Num(n, mu, num.m2 + w * d * (v - mu)) end
 
-let norm = fn(num, v)
-  let z = (v - num.mu) / (sd(num) + 1/BIG)
+fn norm(num, v)
+  $z = (v - num.mu) / (sd(num) + 1/BIG)
   @1 / (1 + exp(-1.7 * max(-3, min(3, z)))) end
 
-let merge = fn(i, j, w)
-  let w = w or 1
+fn merge(i, j, w)
+  $w = w or 1
   if i.symp then
-    let u = Sym()
+    $u = Sym()
     for _, p in ipairs({{i,1}, {j,w}}) do
       for k, vv in pairs(p[1].has) do
         u.has[k] = (u.has[k] or 0) + p[2] * vv end end
     @u end
-  let n = i.n + w * j.n
+  $n = i.n + w * j.n
   if n <= 0 then @Num() end
-  let mu = (i.n*i.mu + w * j.n * j.mu) / n
-  let d = j.mu - i.mu
-  let m2 = i.m2 + w*j.m2 + w*d*d*i.n*j.n / n
+  $mu = (i.n*i.mu + w * j.n * j.mu) / n
+  $d = j.mu - i.mu
+  $m2 = i.m2 + w*j.m2 + w*d*d*i.n*j.n / n
   @Num(n, mu, m2) end
 
 -- 2. Data ---------------------------------------------------
-let Data = fn(src)
-  let it = {names={}, klass=nil, x={}, y={},
+fn Data(src)
+  $it = {names={}, klass=nil, x={}, y={},
          goal={}, cols={}, rows={}}
-  let roles = fn(names)
+  fn roles(names)
     it.names = names
     for at, s in ipairs(names) do
-      let z = s:sub(-1)
-      let first = s:sub(1,1)
+      $z = s:sub(-1)
+      $first = s:sub(1,1)
       it.cols[at] = (first == first:lower() and Sym or Num)()
       if z == "-" or z == "+" or z == "!" then
         table.insert(it.y, at)
@@ -87,23 +87,23 @@ add = fn(it, v)
     it.cols = [add(it.cols[at], x) for at, x in ipairs(v)] end
   @it end
 
-adds = fn(src, it)
-  let it = it or Num()
-  for _, x in ipairs(src) do it = add(it, x) end
+fn adds(src, it)
+  $it = it or Num()
+  for x in src do it = add(it, x) end
   @it end
 
 -- 3. Discretization ----------------------------------------
-let cutsSyms = fn(bins, tot, hi, at)     -- iterator of candidate cuts
-  let k, l = nil, nil
+fn cutsSyms(bins, tot, hi, at)        -- iterator of candidate cuts
+  $k, l = nil, nil
   @fn()
     k, l = next(bins, k)
     if k ~= nil then
       @{score=l.m2 + merge(tot, l, -1).m2,
          at=at, lo=hi[k], hi=hi[k], leaf=l} end end end
 
-let cutsNums = fn(bins, tot, hi, at)     -- iterator of candidate cuts
-  let ks = sort([k for k, _ in pairs(bins)])
-  let l, j = Num(), 0
+fn cutsNums(bins, tot, hi, at)        -- iterator of candidate cuts
+  $ks = sort([k for k, _ in bins])
+  $l, j = Num(), 0
   @fn()
     j = j + 1
     if j < #ks then
@@ -111,85 +111,85 @@ let cutsNums = fn(bins, tot, hi, at)     -- iterator of candidate cuts
       @{score=l.m2 + merge(tot, l, -1).m2,
          at=at, lo=-BIG, hi=hi[ks[j]], leaf=l} end end end
 
-let cuts = fn(data, rows, y)
-  let u, ys = {}, [y(r) for _, r in ipairs(rows)]
-  for _, at in ipairs(data.x) do
-    let c = data.cols[at]
-    let tot, bins, hi = Num(), {}, {}
+fn cuts(data, rows, y)
+  $u, ys = {}, [y(r) for r in rows]
+  for at in data.x do
+    $c = data.cols[at]
+    $tot, bins, hi = Num(), {}, {}
     for i, r in ipairs(rows) do
-      let v = r[at]
+      $v = r[at]
       if v ~= "?" then
-        let k = (c.symp and v) or floor(the.bins*norm(c, v))
+        $k = (c.symp and v) or floor(the.bins*norm(c, v))
         bins[k] = add(bins[k] or Num(), ys[i])
         tot     = add(tot, ys[i])
         hi[k] = c.symp and v or max(hi[k] or -BIG, v) end end
-    let cut = argmin((c.symp and cutsSyms or cutsNums)(
+    $cut = argmin((c.symp and cutsSyms or cutsNums)(
                     bins, tot, hi, at), fn(z) @z.score end)
     if cut then u[#u+1] = cut end end
   @u end
 
 -- 4. Build a tree ------------------------------------------
-disty = fn(data, row)
-  let p, s = the.p, 0
-  for _, at in ipairs(data.y) do
+fn disty(data, row)
+  $p, s = the.p, 0
+  for at in data.y do
     s = s + abs(norm(data.cols[at], row[at])
                 - data.goal[at]) ^ p end
   @(s / #data.y) ^ (1 / p) end
 
-let has = fn(v, lo, hi) @v == "?" or (lo <= v and v <= hi) end
+fn has(v, lo, hi) @v == "?" or (lo <= v and v <= hi) end
 
-let rest = fn(rows, at, lo, hi)
-  @[r for _, r in ipairs(rows) if not has(r[at], lo, hi)] end
+fn rest(rows, at, lo, hi)
+  @[r for r in rows if not has(r[at], lo, hi)] end
 
-grows = fn(data, y, root, d)
-  let d = d or 0
-  let u = {}
+fn grows(data, y, root, d)
+  $d = d or 0
+  $u = {}
   if d < the.depth then
-    let cs = [c for _, c in ipairs(cuts(data, data.rows, y))
+    $cs = [c for _, c in ipairs(cuts(data, data.rows, y))
              if c.leaf.n > (#root.rows) ^ 0.33]
     if #cs > 0 then
       sort(cs, fn(a,b) @a.leaf.mu < b.leaf.mu end)
       for bit, c in ipairs({cs[1], cs[#cs]}) do
-        let no = rest(data.rows, c.at, c.lo, c.hi)
+        $no = rest(data.rows, c.at, c.lo, c.hi)
         if #no > 0 then
-          let child = {data.names}
-          for _, r in ipairs(no) do table.insert(child, r) end
-          let bs = grows(Data(child), y, root, d+1)
-          for _, br in ipairs(bs) do
+          $child = {data.names}
+          for r in no do table.insert(child, r) end
+          $bs = grows(Data(child), y, root, d+1)
+          for br in bs do
             u[#u+1] = {bias=tostring(bit-1) .. br.bias,
                        tree={at=c.at, lo=c.lo, hi=c.hi,
                              left=c.leaf,
                              right=br.tree}} end end end end end
   if #u == 0 then
-    let ys = [y(r) for _, r in ipairs(data.rows)]
+    $ys = [y(r) for r in data.rows]
     u[#u+1] = {bias="", tree=adds(ys)} end
   @u end
 
 -- 5. Use a tree --------------------------------------------
-let predict = fn(t, row)
+fn predict(t, row)
   while not t.nump do
     t = has(row[t.at], t.lo, t.hi) and t.left or t.right end
   @t.mu end
 
-let tune = fn(cands, rows, y)
-  let err = fn(t)
+fn tune(cands, rows, y)
+  fn err(t)
     @sum([abs(y(r) - predict(t, r))
-           for _, r in ipairs(rows)]) / #rows end
+           for r in rows]) / #rows end
   @argmin(cands, err) end
 
-show = fn(data, t)
+fn show(data, t)
   if t.nump then
     print(("%-33s leaf  d2h %.2f n=%d"):fmt("", t.mu, t.n))
     @nil end
-  let nm = data.names[t.at]
-  let c = ""
+  $nm = data.names[t.at]
+  $c = ""
   if t.lo == t.hi then
     c = ("%s == %s"):fmt(nm, tostring(t.lo))
   elif t.lo == -BIG then
     c = ("%s <= %s"):fmt(nm, tostring(qty(t.hi)))
   else
     c = ("%s >= %s"):fmt(nm, tostring(qty(t.lo))) end
-  let lf = t.left
+  $lf = t.left
   print(("if %-30s then d2h %.2f n=%d"):fmt(
     c, lf.mu, lf.n))
   show(data, t.right) end
@@ -202,34 +202,34 @@ qty = fn(v)
   @v end
 
 -- 7. Tests/demos -------------------------------------------
-let test_main = fn()
-  let data = Data([row for row in csv(the.file)])
-  let y = fn(r) @disty(data, r) end
-  let cands = [b.tree for _, b in ipairs(grows(data, y, data))]
+fn test_main()
+  $data = Data([row for row in csv(the.file)])
+  fn y(r) @disty(data, r) end
+  $cands = [b.tree for _, b in ipairs(grows(data, y, data))]
   show(data, tune(cands, data.rows, y)) end
 
-let test_trees = fn()
-  let data = Data([row for row in csv(the.file)])
-  let y = fn(r) @disty(data, r) end
-  let trees = grows(data, y, data)
+fn test_trees()
+  $data = Data([row for row in csv(the.file)])
+  fn y(r) @disty(data, r) end
+  $trees = grows(data, y, data)
   for i, bt in ipairs(trees) do
-    let t = bt.tree
-    let e = sum([abs(y(r) - predict(t, r))
-              for _, r in ipairs(data.rows)]) / #data.rows
+    $t = bt.tree
+    $e = sum([abs(y(r) - predict(t, r))
+              for r in data.rows]) / #data.rows
     print(("===== tree %2d   bias %-5s   err %.3f ====="):fmt(
       i, bt.bias, e))
     show(data, t)
     print() end end
 
 -- 8. Start-up (skipped when required as a module) -----------
-if arg and arg[0] and arg[0]:gsub(".*/", ""):match("^fft%.lu[ak]$") then
+if arg and arg[0] and arg[0]:gsub(".*/", ""):match("^fft%.lu[ac]$") then
   for i = 1, #arg - 1 do
-    for k, _ in pairs(the) do
+    for k, _ in the do
       if arg[i] == "-" .. k:sub(1,1) then
         the[k] = of(arg[i+1]) end end end
   randomseed(the.seed)
-  let mode = "main"
-  for _, a in ipairs(arg) do
+  $mode = "main"
+  for a in arg do
     if a == "--trees" then mode = "trees" end end
   (mode == "trees" and test_trees or test_main)() end
 

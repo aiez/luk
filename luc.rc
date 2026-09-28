@@ -1,0 +1,17 @@
+# luc.rc - sourced after $(KONFIG)/bashrc by `make sh`.
+# Overrides the konfig `vi` alias with a function that accepts
+# positional args. .luc files carry a `ft=lua` modeline, so Lua's
+# own syntax covers them.
+
+unalias vi 2>/dev/null
+vi() {
+  local init=""
+  [ -f "${KONFIG:-.}/init.lua" ] && init="-u ${KONFIG}/init.lua"
+  NVIM_APPNAME="${APP:-luc}" nvim --clean $init \
+    -c "syntax on" \
+    -c "filetype plugin indent on" \
+    "$@"
+}
+
+# transpile any .luc file via luc.lua
+luc2lua() { lua -e 'io.write(require("luc")(io.read("*a")))' < "$1"; }

@@ -1,22 +1,30 @@
--- luk.lua : whole-source ".luk" -> Lua transpiler. Pure function,
+-- luc.lua : whole-source ".luc" -> Lua transpiler. Pure function,
 -- no side effects, no IO:
---   local luk = require"luk"
---   local f   = assert(load(luk(src), "@foo.luk"))  -- real err lines
--- The require() hook for .luk modules lives in the "luk" runner.
--- Lua plus five sigils, all pure same-line rewrites:
---   fn=function  elif=elseif  @=return  let NAME=V  comprehensions.
+--   local luc = require"luc"
+--   local f   = assert(load(luc(src), "@foo.luc"))  -- real err lines
+-- The require() hook for .luc modules lives in the "luc" runner.
+-- Lua plus six rewrites, all pure and same-line:
+--   fn NAME(=local function NAME(  fn(=function(  elif=elseif
+--   @=return  $NAME=V  loops and comprehensions auto-wrap ITER.
+-- "fn" defaults to local; write Lua's own "function" for a global.
 -- Blocks are Lua's own (then/do/end), so every source line maps 1:1
--- onto the generated Lua and error lines always match. "@" is a
--- character Lua never uses, so return needs no context: one rule,
--- and "a ^ b" stays exponentiation.
+-- onto the generated Lua and error lines always match. "@" and "$"
+-- are characters Lua never uses, so return and local need no
+-- context: one rule each, and "a ^ b" stays exponentiation.
 -- Full guide + gotchas: README "LANGUAGE REFERENCE".
 
 -- PUT is a statement ("_r[#_r+1]=E", "_r[K]=E"), not the element
 -- expression E. IFF/FI are the optional "if C then" ... "end".
-local function comprehension(put,v,it,c)
+-- Loop vars + iterable, for "for" and comprehensions alike: 1 var
+-- and no call -> ipairs, 2 vars and no call -> pairs, else as-is.
+local function iter(v,it)
   if not v:find"," and not it:find"%(" then
     v,it = "_,"..v, "ipairs("..it..")"
   elseif not it:find"%(" then it = "pairs("..it..")" end
+  return v,it end
+
+local function comprehension(put,v,it,c)
+  v,it = iter(v,it)
   local iff = c and ("if "..c.." then ") or ""
   local fi  = c and "end " or ""
   return ("(function() local _r={} for %s in %s "..
@@ -33,12 +41,15 @@ local function body(n)  -- "E for V in ITER [if C]" -> E,V,ITER,C?
 local H = {"(%-%-%[(=*)%[.-%]%2%])", "(%[(=*)%[.-%]%2%])",
            '"[^"\n]*"', "'[^'\n]*'", "%-%-[^\n]*"}
 
--- R: every rewrite luk does, in order.
+-- R: every rewrite luc does, in order.
 local R = {
   {"%f[%w_]elif%f[%W]",      "elseif"},
+  {"%f[%w_]fn%s+([%w_]+)%s*%(","local function %1("},
   {"%f[%w_]fn%f[%W]",        "function"},
   {"@[ \t]*",                "return "},
-  {"%f[%w_]let%f[%W]",       "local"},
+  {"%$[ \t]*",               "local "},
+  {"%f[%w_]for%s+([^\n]-)%s+in%s+([^\n]-)%s+do%f[%W]",
+   function(v,it) return ("for %s in %s do"):format(iter(v,it)) end},
   {"%b{}", function(m)
      local e,v,it,c = body(m:sub(2,-2))
      local k,ve; if e then k,ve = e:match"^(.-),(.+)$" end
